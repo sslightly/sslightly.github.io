@@ -1,0 +1,2759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A.I Excel</title>
+    <link rel="icon" href="me.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Windows 7 & Office 2010 Authentic Typography */
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            background-color: #dce7f5;
+        }
+
+        /* Full-Viewport Electron-Ready App Shell (No Outer Window Title Bar) */
+        .excel-app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            background: #dce7f5;
+        }
+
+        /* Office 2010 Ribbon Tab Strip */
+        .ribbon-tabs {
+            height: 26px;
+            display: flex;
+            align-items: flex-end;
+            padding: 2px 8px 0 6px;
+            gap: 2px;
+            background: linear-gradient(180deg, #cde0f5 0%, #bad3ef 50%, #aecbe9 100%);
+            border-bottom: 1px solid #8ba7c7;
+            flex-shrink: 0;
+        }
+
+        /* Office 2010 Green File Tab */
+        .office-file-tab {
+            height: 23px;
+            padding: 0 16px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #ffffff;
+            border-radius: 3px 3px 0 0;
+            border: 1px solid #165932;
+            border-bottom: none;
+            background: linear-gradient(180deg,
+                #43a569 0%,
+                #2a864e 48%,
+                #1c713d 50%,
+                #26844b 100%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .office-file-tab:hover, .office-file-tab.active {
+            background: linear-gradient(180deg,
+                #52b87a 0%,
+                #33965a 48%,
+                #228047 50%,
+                #2e9456 100%);
+        }
+
+        /* Standard Ribbon Tabs */
+        .ribbon-tab {
+            height: 23px;
+            padding: 0 13px;
+            font-size: 11.5px;
+            color: #1e395b;
+            border-radius: 3px 3px 0 0;
+            border: 1px solid transparent;
+            border-bottom: none;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.08s;
+        }
+        .ribbon-tab:hover:not(.active) {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.75) 0%, rgba(226, 239, 252, 0.75) 100%);
+            border-color: #9cb9d9;
+        }
+        .ribbon-tab.active {
+            background: linear-gradient(180deg, #ffffff 0%, #f4f8fd 65%, #e9f1fa 100%);
+            border-color: #8ba7c7;
+            color: #15345a;
+            font-weight: 600;
+            position: relative;
+            top: 1px;
+            height: 24px;
+            z-index: 5;
+        }
+
+        /* Office 2010 Blue-Silver Ribbon Command Surface */
+        .ribbon-body {
+            height: 88px;
+            background: linear-gradient(180deg,
+                #f6f9fd 0%,
+                #e9f1fa 48%,
+                #dce7f5 50%,
+                #e4eef9 100%);
+            border-bottom: 1px solid #8ba7c7;
+            box-shadow: inset 0 1px 0 #ffffff;
+            display: flex;
+            align-items: stretch;
+            padding: 3px 6px 2px 6px;
+            gap: 3px;
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+        .ribbon-body.hidden-tab {
+            display: none;
+        }
+
+        .ribbon-group {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2px 6px 1px 6px;
+            border-right: 1px solid #b5c9e2;
+            box-shadow: 1px 0 0 rgba(255, 255, 255, 0.75);
+            flex-shrink: 0;
+        }
+
+        .ribbon-group-title {
+            text-align: center;
+            font-size: 10px;
+            color: #4c6482;
+            line-height: 12px;
+            padding-top: 1px;
+        }
+
+        /* Classic Windows 7 Glossy Bevel Button */
+        .win7-btn {
+            border: 1px solid transparent;
+            border-radius: 3px;
+            color: #1e395b;
+            font-size: 11px;
+            transition: all 0.06s;
+            cursor: pointer;
+            background: transparent;
+        }
+        .win7-btn:hover {
+            border-color: #f1c43f;
+            background: linear-gradient(180deg,
+                #fffdf5 0%,
+                #ffefb8 48%,
+                #ffd966 50%,
+                #ffe793 100%);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+        }
+        .win7-btn.active {
+            border-color: #c28a30;
+            background: linear-gradient(180deg,
+                #f8d382 0%,
+                #f4bc4e 48%,
+                #eda326 50%,
+                #f6c45b 100%);
+            box-shadow: inset 0 1px 2px rgba(130, 80, 10, 0.35);
+            color: #111827;
+        }
+
+        .win7-select {
+            height: 21px;
+            font-size: 11px;
+            color: #1e293b;
+            background: linear-gradient(180deg, #ffffff 0%, #f1f5fb 100%);
+            border: 1px solid #9eb6d4;
+            border-radius: 2px;
+            padding: 0 4px;
+            outline: none;
+            cursor: pointer;
+        }
+        .win7-select:hover, .win7-select:focus {
+            border-color: #e5b336;
+        }
+
+        /* Excel 2010 Formula Bar */
+        .formula-bar {
+            height: 26px;
+            background: linear-gradient(180deg, #f3f7fc 0%, #e4edf8 100%);
+            border-bottom: 1px solid #9eb6d4;
+            display: flex;
+            align-items: center;
+            padding: 2px 6px;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .name-box {
+            width: 78px;
+            height: 20px;
+            background: #ffffff;
+            border: 1px solid #9eb6d4;
+            font-size: 11.5px;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.06);
+        }
+
+        .fx-badge {
+            height: 20px;
+            padding: 0 7px;
+            background: linear-gradient(180deg, #ffffff 0%, #e3ecf7 100%);
+            border: 1px solid #9eb6d4;
+            border-radius: 2px;
+            font-family: "Times New Roman", Georgia, serif;
+            font-style: italic;
+            font-weight: bold;
+            font-size: 13px;
+            color: #1e395b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .fx-badge:hover {
+            border-color: #e5b336;
+        }
+
+        .formula-input-box {
+            flex: 1;
+            height: 20px;
+            background: #ffffff;
+            border: 1px solid #9eb6d4;
+            padding: 0 6px;
+            font-family: Calibri, "Segoe UI", sans-serif;
+            font-size: 13px;
+            color: #000000;
+            outline: none;
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.06);
+        }
+        .formula-input-box:focus {
+            border-color: #4a82c4;
+        }
+
+        /* Classic Windows 7 Scrollbars */
+        ::-webkit-scrollbar {
+            width: 15px;
+            height: 15px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #eef3fa;
+            border-left: 1px solid #c5d4e8;
+            border-top: 1px solid #c5d4e8;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #f7faff 0%, #d3e1f2 50%, #c1d4eb 100%);
+            border: 1px solid #8fa9c9;
+            border-radius: 2px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #ffffff 0%, #dce9f8 50%, #c8dcf2 100%);
+            border-color: #6c8db8;
+        }
+
+        /* Spreadsheet Grid Container */
+        #grid-container {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+            background-color: #d6e2f0;
+        }
+
+        table.excel-grid {
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: fixed;
+            background-color: #ffffff;
+        }
+
+        /* Excel 2010 Select-All Corner Button */
+        th.corner-header {
+            position: sticky;
+            top: 0;
+            left: 0;
+            z-index: 35;
+            width: 42px;
+            min-width: 42px;
+            height: 22px;
+            background: linear-gradient(180deg, #f7faff 0%, #dce6f4 100%);
+            border-right: 1px solid #9eb6d4;
+            border-bottom: 1px solid #9eb6d4;
+            cursor: pointer;
+        }
+        th.corner-header::after {
+            content: "";
+            position: absolute;
+            right: 3px;
+            bottom: 3px;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 0 9px 9px;
+            border-color: transparent transparent #9eb6d4 transparent;
+        }
+
+        /* Excel 2010 Light Blue-Silver Column Headers */
+        th.col-header {
+            position: sticky;
+            top: 0;
+            z-index: 25;
+            width: 96px;
+            min-width: 96px;
+            height: 22px;
+            background: linear-gradient(180deg,
+                #f9fbfe 0%,
+                #eef3fa 48%,
+                #dde7f4 50%,
+                #e6eef8 100%);
+            color: #1e395b;
+            font-weight: 400;
+            font-size: 11.5px;
+            border-right: 1px solid #9eb6d4;
+            border-bottom: 1px solid #9eb6d4;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        /* Excel 2010 Orange-Gold Active Column Header */
+        th.col-header.active-header {
+            background: linear-gradient(180deg,
+                #ffe7a2 0%,
+                #ffd468 48%,
+                #f8bc3b 50%,
+                #fbd06c 100%);
+            color: #000000;
+            font-weight: 600;
+            border-bottom: 1px solid #c98a18;
+        }
+
+        /* Excel 2010 Light Blue-Silver Row Headers */
+        th.row-header {
+            position: sticky;
+            left: 0;
+            z-index: 20;
+            width: 42px;
+            min-width: 42px;
+            height: 21px;
+            background: linear-gradient(90deg,
+                #f9fbfe 0%,
+                #e8eff8 100%);
+            color: #1e395b;
+            font-weight: 400;
+            font-size: 11.5px;
+            border-right: 1px solid #9eb6d4;
+            border-bottom: 1px solid #c5d4e8;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        /* Excel 2010 Orange-Gold Active Row Header */
+        th.row-header.active-header {
+            background: linear-gradient(90deg,
+                #ffe496 0%,
+                #f8be42 100%);
+            color: #000000;
+            font-weight: 600;
+            border-right: 1px solid #c98a18;
+        }
+
+        /* Freeze Top Row Support */
+        table.excel-grid.freeze-top-row tbody tr:first-child th.row-header {
+            position: sticky;
+            top: 22px;
+            left: 0;
+            z-index: 30;
+        }
+        table.excel-grid.freeze-top-row tbody tr:first-child td.cell {
+            position: sticky;
+            top: 22px;
+            z-index: 18;
+            border-bottom: 2px solid #6c8db8;
+        }
+
+        /* Classic Excel Worksheet Cells */
+        td.cell {
+            width: 96px;
+            min-width: 96px;
+            max-width: 96px;
+            height: 21px;
+            border-right: 1px solid #d0d7e5;
+            border-bottom: 1px solid #d0d7e5;
+            padding: 0 4px;
+            font-family: Calibri, "Segoe UI", sans-serif;
+            font-size: 14px;
+            color: #000000;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: cell;
+            position: relative;
+            background-color: #ffffff;
+            vertical-align: middle;
+        }
+
+        table.excel-grid.hide-gridlines td.cell {
+            border-right-color: transparent;
+            border-bottom-color: transparent;
+        }
+
+        /* Multi-Cell Range Highlight */
+        td.cell.in-range {
+            background-color: #e8f1fc !important;
+        }
+
+        /* Active Primary Cell */
+        td.cell.active-cell {
+            background-color: #ffffff !important;
+        }
+
+        /* Selection Range Outer Borders */
+        td.cell.sel-top { border-top: 2px solid #000000 !important; }
+        td.cell.sel-bottom { border-bottom: 2px solid #000000 !important; }
+        td.cell.sel-left { border-left: 2px solid #000000 !important; }
+        td.cell.sel-right { border-right: 2px solid #000000 !important; }
+
+        /* Fill Handle at Bottom-Right Corner of Selection */
+        .fill-handle {
+            position: absolute;
+            right: -3px;
+            bottom: -3px;
+            width: 6px;
+            height: 6px;
+            background-color: #000000;
+            border: 1px solid #ffffff;
+            z-index: 25;
+            cursor: crosshair;
+        }
+
+        /* Autofill Target Preview Outline */
+        td.cell.fill-preview {
+            outline: 1px dashed #2b579a;
+            outline-offset: -1px;
+            background-color: rgba(214, 232, 252, 0.45) !important;
+        }
+
+        /* Inline Cell Editor */
+        .cell-editor {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            padding: 0 3px;
+            font-family: Calibri, "Segoe UI", sans-serif;
+            font-size: 14px;
+            background: #ffffff;
+            color: #000000;
+            z-index: 30;
+        }
+
+        /* Bottom Sheet Tab Bar (Excel 2010 Style) */
+        .sheet-tab-bar {
+            height: 24px;
+            background: linear-gradient(180deg, #dce7f5 0%, #c8d9ee 100%);
+            border-top: 1px solid #9eb6d4;
+            display: flex;
+            align-items: stretch;
+            padding: 0 6px;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+
+        .sheet-tab {
+            padding: 0 13px;
+            font-size: 11.5px;
+            color: #1e395b;
+            background: linear-gradient(180deg, #d6e4f4 0%, #bfd3eb 100%);
+            border: 1px solid #8ba7c7;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+        .sheet-tab:hover:not(.active) {
+            background: linear-gradient(180deg, #e7f0fa 0%, #d3e2f4 100%);
+        }
+        .sheet-tab.active {
+            background: linear-gradient(180deg, #ffffff 0%, #f5f9fe 100%);
+            color: #000000;
+            font-weight: 600;
+            border-top: 1px solid #ffffff;
+            margin-top: -1px;
+            z-index: 5;
+        }
+
+        .add-sheet-btn {
+            width: 24px;
+            margin-bottom: 2px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #1e395b;
+            background: linear-gradient(180deg, #e7f0fa 0%, #c8d9ee 100%);
+            border: 1px solid #8ba7c7;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .add-sheet-btn:hover {
+            background: linear-gradient(180deg, #fffdf5 0%, #ffd966 100%);
+            border-color: #d6a428;
+        }
+
+        /* Windows 7 / Excel 2010 Status Bar */
+        .win7-statusbar {
+            height: 22px;
+            background: linear-gradient(180deg, #e3edf8 0%, #cbdbee 100%);
+            border-top: 1px solid #9eb6d4;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            font-size: 11px;
+            color: #1e395b;
+            flex-shrink: 0;
+        }
+
+        /* Windows 7 Dropdown & Context Menus */
+        .win7-menu {
+            position: fixed;
+            z-index: 100;
+            min-width: 190px;
+            background: #f5f8fc;
+            border: 1px solid #7693b8;
+            box-shadow: 2px 3px 8px rgba(15, 35, 65, 0.32), inset 0 0 0 1px #ffffff;
+            padding: 3px;
+            font-size: 12px;
+            color: #1e293b;
+        }
+        .win7-menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 10px;
+            border-radius: 2px;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .win7-menu-item:hover {
+            border-color: #f1c43f;
+            background: linear-gradient(180deg, #fffdf5 0%, #ffe699 100%);
+        }
+        .win7-menu-sep {
+            height: 1px;
+            background: #c5d4e8;
+            margin: 3px 4px;
+        }
+
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: 1px solid #8ba7c7;
+            width: 16px;
+            height: 16px;
+            padding: 0;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+        }
+
+        @media print {
+            .ribbon-tabs, .ribbon-body, .formula-bar, .sheet-tab-bar, .win7-statusbar {
+                display: none !important;
+            }
+            #grid-container {
+                overflow: visible !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="excel-app">
+        <!-- 1. Office 2010 Ribbon Tab Strip (Starts flush at top of viewport) -->
+        <div class="ribbon-tabs">
+            <button id="fileMenuBtn" class="office-file-tab" type="button">File</button>
+            <div class="ribbon-tab active" data-ribbon-tab="Home">Home</div>
+            <div class="ribbon-tab" data-ribbon-tab="Insert">Insert</div>
+            <div class="ribbon-tab" data-ribbon-tab="Formulas">Formulas</div>
+            <div class="ribbon-tab" data-ribbon-tab="View">View</div>
+
+            <!-- Quick Undo / Redo / Save Bar on Right of Ribbon Tabs -->
+            <div class="ml-auto flex items-center space-x-1 pb-0.5">
+                <button id="btn-undo" class="win7-btn px-1.5 py-0.5 flex items-center space-x-1" title="Undo (Ctrl+Z)" type="button">
+                    <span>&#8630;</span><span class="hidden sm:inline text-[10.5px]">Undo</span>
+                </button>
+                <button id="btn-redo" class="win7-btn px-1.5 py-0.5 flex items-center space-x-1" title="Redo (Ctrl+Y)" type="button">
+                    <span>&#8631;</span><span class="hidden sm:inline text-[10.5px]">Redo</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 2A. HOME RIBBON TAB -->
+        <div class="ribbon-body" id="ribbon-Home">
+            <!-- Clipboard Group -->
+            <div class="ribbon-group">
+                <div class="flex items-center space-x-1 my-auto">
+                    <button id="btn-paste" class="win7-btn flex flex-col items-center justify-center px-2 py-1" title="Paste (Ctrl+V)" type="button">
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <span class="text-[10.5px] leading-tight mt-0.5">Paste</span>
+                    </button>
+                    <div class="flex flex-col space-y-0.5">
+                        <button id="btn-cut" class="win7-btn px-1.5 py-0.5 text-left flex items-center space-x-1" title="Cut (Ctrl+X)" type="button">
+                            <span>&#9986;</span><span>Cut</span>
+                        </button>
+                        <button id="btn-copy" class="win7-btn px-1.5 py-0.5 text-left flex items-center space-x-1" title="Copy (Ctrl+C)" type="button">
+                            <span>&#10697;</span><span>Copy</span>
+                        </button>
+                        <button id="btn-format-painter" class="win7-btn px-1.5 py-0.5 text-left flex items-center space-x-1" title="Format Painter" type="button">
+                            <span>&#128396;</span><span>Format</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="ribbon-group-title">Clipboard</div>
+            </div>
+
+            <!-- Font Group -->
+            <div class="ribbon-group">
+                <div class="flex flex-col justify-center space-y-1.5 my-auto">
+                    <div class="flex items-center space-x-1">
+                        <select id="select-font-family" class="win7-select w-28" title="Font">
+                            <option value="Calibri, sans-serif">Calibri</option>
+                            <option value="'Segoe UI', sans-serif">Segoe UI</option>
+                            <option value="Arial, sans-serif">Arial</option>
+                            <option value="'Times New Roman', serif">Times New Roman</option>
+                            <option value="'Courier New', monospace">Courier New</option>
+                        </select>
+                        <select id="select-font-size" class="win7-select w-12" title="Font Size">
+                            <option value="11">8</option>
+                            <option value="12">9</option>
+                            <option value="13">10</option>
+                            <option value="14" selected>11</option>
+                            <option value="16">12</option>
+                            <option value="18">14</option>
+                            <option value="21">16</option>
+                            <option value="24">18</option>
+                            <option value="28">22</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-0.5">
+                        <button id="btn-bold" class="win7-btn w-6 h-5 flex items-center justify-center font-bold" title="Bold (Ctrl+B)" type="button">B</button>
+                        <button id="btn-italic" class="win7-btn w-6 h-5 flex items-center justify-center italic font-serif" title="Italic (Ctrl+I)" type="button">I</button>
+                        <button id="btn-underline" class="win7-btn w-6 h-5 flex items-center justify-center underline" title="Underline (Ctrl+U)" type="button">U</button>
+                        <button id="btn-strike" class="win7-btn w-6 h-5 flex items-center justify-center line-through" title="Strikethrough" type="button">S</button>
+                        <span class="h-4 w-px bg-[#b5c9e2] mx-0.5"></span>
+                        <button id="btn-borders" class="win7-btn px-1.5 h-5 flex items-center justify-center" title="Toggle All Borders on Selection" type="button">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+                                <rect x="2" y="2" width="12" height="12"/><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/>
+                            </svg>
+                        </button>
+                        <label class="win7-btn px-1 h-5 flex items-center space-x-0.5 cursor-pointer" title="Fill Color">
+                            <span class="text-[10px] font-bold text-amber-600">Bg</span>
+                            <input type="color" id="input-bg-color" value="#ffffff">
+                        </label>
+                        <label class="win7-btn px-1 h-5 flex items-center space-x-0.5 cursor-pointer" title="Font Color">
+                            <span class="font-serif font-bold text-xs text-red-700 leading-none">A</span>
+                            <input type="color" id="input-text-color" value="#000000">
+                        </label>
+                    </div>
+                </div>
+                <div class="ribbon-group-title">Font</div>
+            </div>
+
+            <!-- Alignment Group -->
+            <div class="ribbon-group">
+                <div class="flex flex-col justify-center space-y-1.5 my-auto">
+                    <!-- Vertical Alignment -->
+                    <div class="flex items-center space-x-0.5">
+                        <button id="btn-valign-top" class="win7-btn w-6 h-5 flex items-center justify-center" title="Top Align" type="button">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.5"><line x1="2" y1="3" x2="14" y2="3"/><line x1="4" y1="6" x2="12" y2="6"/></svg>
+                        </button>
+                        <button id="btn-valign-middle" class="win7-btn w-6 h-5 flex items-center justify-center" title="Middle Align" type="button">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.5"><line x1="2" y1="7" x2="14" y2="7"/><line x1="4" y1="10" x2="12" y2="10"/></svg>
+                        </button>
+                        <button id="btn-valign-bottom" class="win7-btn w-6 h-5 flex items-center justify-center" title="Bottom Align" type="button">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="10" x2="12" y2="10"/><line x1="2" y1="13" x2="14" y2="13"/></svg>
+                        </button>
+                        <span class="h-4 w-px bg-[#b5c9e2] mx-0.5"></span>
+                        <button id="btn-wrap-text" class="win7-btn px-1.5 h-5 flex items-center text-[10.5px]" title="Wrap Text" type="button">Wrap</button>
+                    </div>
+                    <!-- Horizontal Alignment -->
+                    <div class="flex items-center space-x-0.5">
+                        <button id="btn-align-left" class="win7-btn w-6 h-5 flex items-center justify-center" title="Align Text Left" type="button">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                        <button id="btn-align-center" class="win7-btn w-6 h-5 flex items-center justify-center" title="Center" type="button">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+                            </svg>
+                        </button>
+                        <button id="btn-align-right" class="win7-btn w-6 h-5 flex items-center justify-center" title="Align Text Right" type="button">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="ribbon-group-title">Alignment</div>
+            </div>
+
+            <!-- Number Formatting Group -->
+            <div class="ribbon-group">
+                <div class="flex flex-col justify-center space-y-1.5 my-auto">
+                    <select id="select-num-format" class="win7-select w-28" title="Number Format">
+                        <option value="general">General</option>
+                        <option value="number">Number (0.00)</option>
+                        <option value="currency">Currency ($0.00)</option>
+                        <option value="percent">Percentage (0.0%)</option>
+                        <option value="comma">Comma (1,000)</option>
+                    </select>
+                    <div class="flex items-center space-x-1">
+                        <button id="btn-fmt-currency" class="win7-btn px-1.5 h-5 font-semibold" title="Accounting Number Format ($)" type="button">$</button>
+                        <button id="btn-fmt-percent" class="win7-btn px-1.5 h-5 font-semibold" title="Percent Style (%)" type="button">%</button>
+                        <button id="btn-fmt-comma" class="win7-btn px-1.5 h-5 font-semibold" title="Comma Style (,)" type="button">,</button>
+                        <button id="btn-dec-inc" class="win7-btn px-1 h-5 text-[10px]" title="Increase Decimal" type="button">.00&#8592;</button>
+                        <button id="btn-dec-dec" class="win7-btn px-1 h-5 text-[10px]" title="Decrease Decimal" type="button">.0&#8594;</button>
+                    </div>
+                </div>
+                <div class="ribbon-group-title">Number</div>
+            </div>
+
+            <!-- Editing Group -->
+            <div class="ribbon-group">
+                <div class="flex items-center space-x-1 my-auto">
+                    <div class="flex flex-col space-y-0.5">
+                        <button id="btn-autosum" class="win7-btn px-2 py-0.5 text-left flex items-center space-x-1" title="AutoSum (=SUM)" type="button">
+                            <span class="font-serif font-bold text-[#1e395b]">&#8721;</span><span>AutoSum</span>
+                        </button>
+                        <button id="btn-clear-contents" class="win7-btn px-2 py-0.5 text-left flex items-center space-x-1" title="Clear Contents (Delete)" type="button">
+                            <span class="text-red-600">&#10005;</span><span>Clear Contents</span>
+                        </button>
+                        <button id="btn-clear-formats" class="win7-btn px-2 py-0.5 text-left flex items-center space-x-1" title="Clear Formatting" type="button">
+                            <span class="text-pink-600">&#9003;</span><span>Clear Formats</span>
+                        </button>
+                    </div>
+                    <div class="flex flex-col space-y-0.5">
+                        <button id="btn-sort-asc" class="win7-btn px-2 py-0.5 text-left" title="Sort Selected Column A to Z" type="button">Sort A&#8594;Z</button>
+                        <button id="btn-sort-desc" class="win7-btn px-2 py-0.5 text-left" title="Sort Selected Column Z to A" type="button">Sort Z&#8594;A</button>
+                    </div>
+                </div>
+                <div class="ribbon-group-title">Editing</div>
+            </div>
+        </div>
+
+        <!-- 2B. INSERT RIBBON TAB -->
+        <div class="ribbon-body hidden-tab" id="ribbon-Insert">
+            <div class="ribbon-group">
+                <div class="flex items-center space-x-1 my-auto">
+                    <button id="btn-insert-row" class="win7-btn flex flex-col items-center justify-center px-2.5 py-1" type="button">
+                        <span class="text-base font-bold text-[#1e7145]">+&#8595;</span>
+                        <span class="text-[10.5px]">Insert Row</span>
+                    </button>
+                    <button id="btn-insert-col" class="win7-btn flex flex-col items-center justify-center px-2.5 py-1" type="button">
+                        <span class="text-base font-bold text-[#2b579a]">+&#8594;</span>
+                        <span class="text-[10.5px]">Insert Column</span>
+                    </button>
+                    <button id="btn-delete-row" class="win7-btn flex flex-col items-center justify-center px-2.5 py-1" type="button">
+                        <span class="text-base font-bold text-red-700">-&#8595;</span>
+                        <span class="text-[10.5px]">Delete Row</span>
+                    </button>
+                    <button id="btn-delete-col" class="win7-btn flex flex-col items-center justify-center px-2.5 py-1" type="button">
+                        <span class="text-base font-bold text-red-700">-&#8594;</span>
+                        <span class="text-[10.5px]">Delete Column</span>
+                    </button>
+                </div>
+                <div class="ribbon-group-title">Cells</div>
+            </div>
+
+            <div class="ribbon-group">
+                <div class="flex items-center space-x-1.5 my-auto">
+                    <button id="btn-chart-bar" class="win7-btn flex flex-col items-center justify-center px-3 py-1" type="button">
+                        <svg class="w-6 h-6 text-[#2b579a]" fill="currentColor" viewBox="0 0 24 24">
+                            <rect x="3" y="10" width="4" height="10"/><rect x="10" y="4" width="4" height="16"/><rect x="17" y="7" width="4" height="13"/>
+                        </svg>
+                        <span class="text-[10.5px]">Column Chart</span>
+                    </button>
+                    <button id="btn-chart-line" class="win7-btn flex flex-col items-center justify-center px-3 py-1" type="button">
+                        <svg class="w-6 h-6 text-[#1e7145]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="3 17 9 11 14 14 21 6"/>
+                        </svg>
+                        <span class="text-[10.5px]">Line Chart</span>
+                    </button>
+                </div>
+                <div class="ribbon-group-title">Charts (From Selection)</div>
+            </div>
+        </div>
+
+        <!-- 2C. FORMULAS RIBBON TAB -->
+        <div class="ribbon-body hidden-tab" id="ribbon-Formulas">
+            <div class="ribbon-group">
+                <div class="flex flex-wrap items-center gap-1 max-w-xl my-auto">
+                    <button class="win7-btn px-2 py-1 font-mono" data-insert-fn="=SUM()" type="button">SUM</button>
+                    <button class="win7-btn px-2 py-1 font-mono" data-insert-fn="=AVERAGE()" type="button">AVERAGE</button>
+                    <button class="win7-btn px-2 py-1 font-mono" data-insert-fn="=COUNT()" type="button">COUNT</button>
+                    <button class="win7-btn px-2 py-1 font-mono" data-insert-fn="=COUNTA()" type="button">COUNTA</button>
+                    <button class="win7-btn px-2 py-1 font-mono" data-insert-fn="=MIN()" type="button">MIN</button>
+                    <button class="win7-btn px-2 py-1 font-mono" data-insert-fn="=MAX()" type="button">MAX</button>
+                    <button class="win7-btn px-2 py-1 font-mono" data-insert-fn="=IF(A1>0, 1, 0)" type="button">IF</button>
+                    <button class="win7-btn px-2 py-1 font-mono" data-insert-fn="=ROUND(, 2)" type="button">ROUND</button>
+                    <button class="win7-btn px-2 py-1 font-mono" data-insert-fn="=CONCAT()" type="button">CONCAT</button>
+                    <button class="win7-btn px-2 py-1 font-mono" data-insert-fn="=LEN()" type="button">LEN</button>
+                    <button class="win7-btn px-2 py-1 font-mono" data-insert-fn="=UPPER()" type="button">UPPER</button>
+                    <button class="win7-btn px-2 py-1 font-mono" data-insert-fn="=LOWER()" type="button">LOWER</button>
+                    <button class="win7-btn px-2 py-1 font-mono" data-insert-fn="=TODAY()" type="button">TODAY</button>
+                </div>
+                <div class="ribbon-group-title">Function Library</div>
+            </div>
+
+            <div class="ribbon-group">
+                <div class="flex items-center space-x-1 my-auto">
+                    <button id="btn-show-formulas" class="win7-btn flex flex-col items-center justify-center px-2.5 py-1" type="button">
+                        <span class="font-mono font-bold text-sm">fx</span>
+                        <span class="text-[10.5px]">Show Formulas</span>
+                    </button>
+                    <button id="btn-recalc-now" class="win7-btn flex flex-col items-center justify-center px-2.5 py-1" type="button">
+                        <span class="font-bold text-sm text-[#1e7145]">&#8635;</span>
+                        <span class="text-[10.5px]">Calculate Now</span>
+                    </button>
+                </div>
+                <div class="ribbon-group-title">Formula Auditing &amp; Calculation</div>
+            </div>
+        </div>
+
+        <!-- 2D. VIEW RIBBON TAB -->
+        <div class="ribbon-body hidden-tab" id="ribbon-View">
+            <div class="ribbon-group">
+                <div class="flex items-center space-x-2 my-auto px-1">
+                    <label class="flex items-center space-x-1.5 text-[11.5px] text-[#1e395b] cursor-pointer">
+                        <input type="checkbox" id="chk-gridlines" checked class="accent-[#2b579a]">
+                        <span>Gridlines</span>
+                    </label>
+                    <button id="btn-freeze-top" class="win7-btn px-2.5 py-1" type="button">Freeze Top Row</button>
+                </div>
+                <div class="ribbon-group-title">Show &amp; Window</div>
+            </div>
+
+            <div class="ribbon-group">
+                <div class="flex items-center space-x-1 my-auto">
+                    <button id="btn-zoom-100" class="win7-btn px-2.5 py-1" type="button">100% Zoom</button>
+                    <button id="btn-zoom-in-rib" class="win7-btn px-2.5 py-1" type="button">Zoom In (+)</button>
+                    <button id="btn-zoom-out-rib" class="win7-btn px-2.5 py-1" type="button">Zoom Out (-)</button>
+                </div>
+                <div class="ribbon-group-title">Zoom</div>
+            </div>
+        </div>
+
+        <!-- 3. Excel 2010 Formula Bar -->
+        <div class="formula-bar">
+            <div id="active-cell-address" class="name-box" title="Name Box">A1</div>
+            <button id="fx-insert-btn" class="fx-badge" title="Insert Formula (=)" type="button">fx</button>
+            <input type="text" id="formula-input" class="formula-input-box" spellcheck="false" autocomplete="off">
+        </div>
+
+        <!-- 4. Scrollable 26x100 Spreadsheet Grid -->
+        <main id="grid-container">
+            <table class="excel-grid" id="spreadsheet-table">
+                <thead id="grid-head"></thead>
+                <tbody id="grid-body"></tbody>
+            </table>
+        </main>
+
+        <!-- 5. Bottom Sheet Tabs (Sheet1, Sheet2, Sheet3 + Add Sheet) -->
+        <div class="sheet-tab-bar" id="sheet-tab-bar">
+            <div class="flex items-center space-x-1 pr-2 text-[10px] text-[#3a5475]">
+                <span>&#9664;</span>
+                <span>&#9654;</span>
+            </div>
+            <div id="sheet-tabs-list" class="flex items-stretch gap-0.5"></div>
+            <button id="btn-add-sheet" class="add-sheet-btn" title="Insert Worksheet" type="button">+</button>
+        </div>
+
+        <!-- 6. Windows 7 / Excel 2010 Status Bar -->
+        <footer class="win7-statusbar">
+            <div class="flex items-center space-x-3">
+                <span id="status-mode" class="font-medium">Ready</span>
+                <span id="status-message" class="text-[#165932] font-medium"></span>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <span id="selection-stats" class="text-[#1e395b] font-medium"></span>
+                <div class="flex items-center space-x-1.5 border-l border-[#9eb6d4] pl-3">
+                    <span id="zoom-label" class="w-9 text-right">100%</span>
+                    <button id="zoom-out-btn" class="w-4 h-4 flex items-center justify-center border border-[#8ba7c7] bg-white/70 rounded-xs hover:bg-white cursor-pointer" title="Zoom Out" type="button">-</button>
+                    <input type="range" id="zoom-slider" min="50" max="200" value="100" step="10" class="w-20 h-1.5 accent-[#2b579a] cursor-pointer">
+                    <button id="zoom-in-btn" class="w-4 h-4 flex items-center justify-center border border-[#8ba7c7] bg-white/70 rounded-xs hover:bg-white cursor-pointer" title="Zoom In" type="button">+</button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Hidden File Input for Open CSV -->
+    <input type="file" id="importCsvInput" accept=".csv,text/csv" class="hidden">
+
+    <!-- File Backstage Dropdown Menu -->
+    <div id="file-menu-dropdown" class="win7-menu hidden" style="top: 26px; left: 6px;">
+        <div class="win7-menu-item" id="menu-new-workbook"><span>New Blank Workbook</span><span class="text-xs text-slate-400">Ctrl+N</span></div>
+        <div class="win7-menu-item" id="menu-open-csv"><span>Open CSV...</span><span class="text-xs text-slate-400">Ctrl+O</span></div>
+        <div class="win7-menu-item" id="menu-save-csv"><span>Save Sheet as CSV</span><span class="text-xs text-slate-400">Ctrl+S</span></div>
+        <div class="win7-menu-sep"></div>
+        <div class="win7-menu-item" id="menu-print-sheet"><span>Print Worksheet</span><span class="text-xs text-slate-400">Ctrl+P</span></div>
+        <div class="win7-menu-sep"></div>
+        <div class="win7-menu-item text-red-700" id="menu-clear-all"><span>Clear All Sheets</span></div>
+    </div>
+
+    <!-- Cell Right-Click Context Menu -->
+    <div id="cell-context-menu" class="win7-menu hidden">
+        <div class="win7-menu-item" data-ctx="cut"><span>Cut</span><span class="text-xs text-slate-400">Ctrl+X</span></div>
+        <div class="win7-menu-item" data-ctx="copy"><span>Copy</span><span class="text-xs text-slate-400">Ctrl+C</span></div>
+        <div class="win7-menu-item" data-ctx="paste"><span>Paste</span><span class="text-xs text-slate-400">Ctrl+V</span></div>
+        <div class="win7-menu-sep"></div>
+        <div class="win7-menu-item" data-ctx="insert-row"><span>Insert Row Above</span></div>
+        <div class="win7-menu-item" data-ctx="delete-row"><span>Delete Row</span></div>
+        <div class="win7-menu-item" data-ctx="insert-col"><span>Insert Column Left</span></div>
+        <div class="win7-menu-item" data-ctx="delete-col"><span>Delete Column</span></div>
+        <div class="win7-menu-sep"></div>
+        <div class="win7-menu-item" data-ctx="clear-contents"><span>Clear Contents</span><span class="text-xs text-slate-400">Del</span></div>
+        <div class="win7-menu-item" data-ctx="clear-formats"><span>Clear Formats</span></div>
+    </div>
+
+    <!-- Sheet Tab Right-Click Context Menu -->
+    <div id="sheet-context-menu" class="win7-menu hidden">
+        <div class="win7-menu-item" data-sheet-ctx="rename"><span>Rename Sheet</span></div>
+        <div class="win7-menu-item" data-sheet-ctx="duplicate"><span>Duplicate Sheet</span></div>
+        <div class="win7-menu-sep"></div>
+        <div class="win7-menu-item text-red-700" data-sheet-ctx="delete"><span>Delete Sheet</span></div>
+    </div>
+
+    <!-- Quick Chart Modal (HTML5 Canvas Chart from Selection) -->
+    <div id="chart-modal" class="fixed inset-0 bg-black/35 hidden items-center justify-center z-50">
+        <div class="bg-[#dce7f5] border border-[#5d7ea8] shadow-xl rounded-sm w-[560px] max-w-[95vw] p-3">
+            <div class="flex items-center justify-between border-b border-[#9eb6d4] pb-1.5 mb-2">
+                <span class="text-xs font-semibold text-[#1e395b]" id="chart-modal-title">Microsoft Excel Chart</span>
+                <button id="close-chart-modal" class="win7-btn px-2 py-0.5 font-bold" type="button">&#10005;</button>
+            </div>
+            <div class="bg-white border border-[#9eb6d4] p-2">
+                <canvas id="excel-chart-canvas" width="520" height="280" class="w-full h-auto block"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Full-Featured Windows 7 / Office 2010 HTML5 Excel Clone
+         * Starts 100% blank with multi-sheet workbook, range selection, fill handle,
+         * undo/redo history, number formatting, borders, and comprehensive formula engine.
+         */
+        (function () {
+            const NUM_COLS = 26;  // A-Z
+            const NUM_ROWS = 100; // 1-100
+
+            // Workbook state: map of sheetName -> { cellId: { raw, computed, style } }
+            let sheetOrder = ['Sheet1', 'Sheet2', 'Sheet3'];
+            let workbook = {
+                Sheet1: {},
+                Sheet2: {},
+                Sheet3: {}
+            };
+            let currentSheetName = 'Sheet1';
+            let contextTargetSheet = null;
+
+            // Active cell & selection range state
+            let activeRow = 1;
+            let activeCol = 0;
+            let selStartRow = 1;
+            let selStartCol = 0;
+            let selEndRow = 1;
+            let selEndCol = 0;
+
+            let isSelectingDrag = false;
+            let isFillDragging = false;
+            let fillTargetEndRow = 1;
+            let fillTargetEndCol = 0;
+            let isEditingInline = false;
+            let showFormulasMode = false;
+
+            // Clipboard & Format Painter
+            let internalClipboard = null; // { mode: 'copy'|'cut', rows: number, cols: number, cells: [][] }
+            let formatPainterStyle = null;
+
+            // Undo / Redo Stacks (stores JSON snapshots of current sheet)
+            const undoStack = [];
+            const redoStack = [];
+            const MAX_HISTORY = 40;
+
+            // DOM Cache for fast O(1) cell lookups
+            const cellDomCache = {};
+            const colHeaderCache = [];
+            const rowHeaderCache = [];
+
+            // Core Elements
+            const spreadsheetTable = document.getElementById('spreadsheet-table');
+            const gridHead = document.getElementById('grid-head');
+            const gridBody = document.getElementById('grid-body');
+            const addressBox = document.getElementById('active-cell-address');
+            const formulaInput = document.getElementById('formula-input');
+            const statusMode = document.getElementById('status-mode');
+            const statusMessage = document.getElementById('status-message');
+            const selectionStats = document.getElementById('selection-stats');
+            const sheetTabsList = document.getElementById('sheet-tabs-list');
+
+            function colIndexToLetter(index) {
+                return String.fromCharCode(65 + index);
+            }
+
+            function letterToColIndex(letter) {
+                return letter.toUpperCase().charCodeAt(0) - 65;
+            }
+
+            function getCellId(row, col) {
+                return `${colIndexToLetter(col)}${row}`;
+            }
+
+            function parseCellId(cellId) {
+                const match = /^\$?([A-Z])\$?(\d+)$/i.exec(cellId.trim());
+                if (!match) return null;
+                const col = letterToColIndex(match[1]);
+                const row = parseInt(match[2], 10);
+                if (col < 0 || col >= NUM_COLS || row < 1 || row > NUM_ROWS) return null;
+                return { row, col };
+            }
+
+            function getActiveSheet() {
+                return workbook[currentSheetName];
+            }
+
+            function defaultCellStyle() {
+                return {
+                    fontFamily: 'Calibri, sans-serif',
+                    fontSize: '14',
+                    bold: false,
+                    italic: false,
+                    underline: false,
+                    strike: false,
+                    color: '#000000',
+                    bgColor: '#ffffff',
+                    borderAll: false,
+                    align: '',      // '', 'left', 'center', 'right'
+                    vAlign: 'middle',
+                    wrapText: false,
+                    numFormat: 'general', // 'general', 'number', 'currency', 'percent', 'comma'
+                    decimals: 2
+                };
+            }
+
+            function cloneStyle(style) {
+                return Object.assign(defaultCellStyle(), style || {});
+            }
+
+            function getCellState(cellId, sheetName = currentSheetName) {
+                const sheet = workbook[sheetName];
+                if (!sheet[cellId]) {
+                    sheet[cellId] = {
+                        raw: '',
+                        computed: '',
+                        style: defaultCellStyle()
+                    };
+                }
+                return sheet[cellId];
+            }
+
+            function isDefaultStyle(s) {
+                return (
+                    s.fontFamily === 'Calibri, sans-serif' &&
+                    s.fontSize === '14' &&
+                    !s.bold && !s.italic && !s.underline && !s.strike &&
+                    s.color === '#000000' &&
+                    s.bgColor === '#ffffff' &&
+                    !s.borderAll &&
+                    !s.align &&
+                    s.vAlign === 'middle' &&
+                    !s.wrapText &&
+                    s.numFormat === 'general' &&
+                    s.decimals === 2
+                );
+            }
+
+            function showStatus(msg) {
+                statusMessage.textContent = msg;
+                setTimeout(() => {
+                    if (statusMessage.textContent === msg) {
+                        statusMessage.textContent = '';
+                    }
+                }, 2500);
+            }
+
+            function pushUndoSnapshot() {
+                undoStack.push(JSON.stringify({
+                    sheetName: currentSheetName,
+                    data: workbook[currentSheetName]
+                }));
+                if (undoStack.length > MAX_HISTORY) undoStack.shift();
+                redoStack.length = 0;
+            }
+
+            function performUndo() {
+                if (undoStack.length === 0) return;
+                redoStack.push(JSON.stringify({
+                    sheetName: currentSheetName,
+                    data: workbook[currentSheetName]
+                }));
+                const prev = JSON.parse(undoStack.pop());
+                if (workbook[prev.sheetName]) {
+                    currentSheetName = prev.sheetName;
+                    workbook[currentSheetName] = prev.data;
+                    renderSheetTabs();
+                    renderActiveSheet();
+                    updateSelectionVisuals();
+                    showStatus('Undid last action');
+                }
+            }
+
+            function performRedo() {
+                if (redoStack.length === 0) return;
+                undoStack.push(JSON.stringify({
+                    sheetName: currentSheetName,
+                    data: workbook[currentSheetName]
+                }));
+                const next = JSON.parse(redoStack.pop());
+                if (workbook[next.sheetName]) {
+                    currentSheetName = next.sheetName;
+                    workbook[currentSheetName] = next.data;
+                    renderSheetTabs();
+                    renderActiveSheet();
+                    updateSelectionVisuals();
+                    showStatus('Redid action');
+                }
+            }
+
+            /**
+             * Build 26x100 Grid Once & Cache DOM Nodes
+             */
+            function buildGrid() {
+                const headerTr = document.createElement('tr');
+                const cornerTh = document.createElement('th');
+                cornerTh.className = 'corner-header';
+                cornerTh.title = 'Select All';
+                cornerTh.addEventListener('click', () => {
+                    setSelectionRange(1, 0, NUM_ROWS, NUM_COLS - 1, 1, 0);
+                });
+                headerTr.appendChild(cornerTh);
+
+                for (let c = 0; c < NUM_COLS; c++) {
+                    const th = document.createElement('th');
+                    th.className = 'col-header';
+                    th.textContent = colIndexToLetter(c);
+                    th.addEventListener('click', () => {
+                        setSelectionRange(1, c, NUM_ROWS, c, 1, c);
+                    });
+                    colHeaderCache[c] = th;
+                    headerTr.appendChild(th);
+                }
+                gridHead.appendChild(headerTr);
+
+                const frag = document.createDocumentFragment();
+                for (let r = 1; r <= NUM_ROWS; r++) {
+                    const tr = document.createElement('tr');
+                    const rowTh = document.createElement('th');
+                    rowTh.className = 'row-header';
+                    rowTh.textContent = r;
+                    rowTh.addEventListener('click', () => {
+                        setSelectionRange(r, 0, r, NUM_COLS - 1, r, 0);
+                    });
+                    rowHeaderCache[r] = rowTh;
+                    tr.appendChild(rowTh);
+
+                    for (let c = 0; c < NUM_COLS; c++) {
+                        const cellId = getCellId(r, c);
+                        const td = document.createElement('td');
+                        td.className = 'cell';
+                        td.dataset.row = r;
+                        td.dataset.col = c;
+                        cellDomCache[cellId] = td;
+
+                        td.addEventListener('mousedown', (e) => {
+                            if (e.button === 2) {
+                                // Right-click selects cell if outside current range
+                                const bounds = getSelectionBounds();
+                                if (r < bounds.minRow || r > bounds.maxRow || c < bounds.minCol || c > bounds.maxCol) {
+                                    setSelectionRange(r, c, r, c, r, c);
+                                }
+                                return;
+                            }
+                            if (isEditingInline && (activeRow !== r || activeCol !== c)) {
+                                commitInlineEdit();
+                            }
+
+                            if (e.shiftKey) {
+                                setSelectionRange(activeRow, activeCol, r, c, activeRow, activeCol);
+                            } else {
+                                isSelectingDrag = true;
+                                setSelectionRange(r, c, r, c, r, c);
+                            }
+                        });
+
+                        td.addEventListener('mouseenter', () => {
+                            if (isSelectingDrag) {
+                                setSelectionRange(activeRow, activeCol, r, c, activeRow, activeCol);
+                            } else if (isFillDragging) {
+                                updateFillPreview(r, c);
+                            }
+                        });
+
+                        td.addEventListener('dblclick', () => {
+                            startInlineEdit(r, c);
+                        });
+
+                        tr.appendChild(td);
+                    }
+                    frag.appendChild(tr);
+                }
+                gridBody.appendChild(frag);
+            }
+
+            /**
+             * Selection Bounds & Visual Highlighting
+             */
+            function getSelectionBounds() {
+                return {
+                    minRow: Math.min(selStartRow, selEndRow),
+                    maxRow: Math.max(selStartRow, selEndRow),
+                    minCol: Math.min(selStartCol, selEndCol),
+                    maxCol: Math.max(selStartCol, selEndCol)
+                };
+            }
+
+            function setSelectionRange(r1, c1, r2, c2, primaryR = r1, primaryC = c1) {
+                selStartRow = Math.max(1, Math.min(NUM_ROWS, r1));
+                selStartCol = Math.max(0, Math.min(NUM_COLS - 1, c1));
+                selEndRow = Math.max(1, Math.min(NUM_ROWS, r2));
+                selEndCol = Math.max(0, Math.min(NUM_COLS - 1, c2));
+                activeRow = Math.max(1, Math.min(NUM_ROWS, primaryR));
+                activeCol = Math.max(0, Math.min(NUM_COLS - 1, primaryC));
+
+                // Apply Format Painter if active
+                if (formatPainterStyle && !isSelectingDrag) {
+                    pushUndoSnapshot();
+                    applyStyleToSelection((s) => Object.assign(s, cloneStyle(formatPainterStyle)));
+                    formatPainterStyle = null;
+                    document.getElementById('btn-format-painter').classList.remove('active');
+                }
+
+                updateSelectionVisuals();
+            }
+
+            function updateSelectionVisuals() {
+                // Remove old selection markers
+                document.querySelectorAll('td.cell.in-range, td.cell.active-cell, td.cell.sel-top, td.cell.sel-bottom, td.cell.sel-left, td.cell.sel-right').forEach((el) => {
+                    el.classList.remove('in-range', 'active-cell', 'sel-top', 'sel-bottom', 'sel-left', 'sel-right');
+                });
+                document.querySelectorAll('.fill-handle').forEach((h) => h.remove());
+                colHeaderCache.forEach((th) => th && th.classList.remove('active-header'));
+                rowHeaderCache.forEach((th) => th && th.classList.remove('active-header'));
+
+                const { minRow, maxRow, minCol, maxCol } = getSelectionBounds();
+                const isSingleCell = minRow === maxRow && minCol === maxCol;
+
+                for (let c = minCol; c <= maxCol; c++) {
+                    if (colHeaderCache[c]) colHeaderCache[c].classList.add('active-header');
+                }
+                for (let r = minRow; r <= maxRow; r++) {
+                    if (rowHeaderCache[r]) rowHeaderCache[r].classList.add('active-header');
+                }
+
+                for (let r = minRow; r <= maxRow; r++) {
+                    for (let c = minCol; c <= maxCol; c++) {
+                        const td = cellDomCache[getCellId(r, c)];
+                        if (!td) continue;
+                        if (!isSingleCell) td.classList.add('in-range');
+                        if (r === activeRow && c === activeCol) td.classList.add('active-cell');
+                        if (r === minRow) td.classList.add('sel-top');
+                        if (r === maxRow) td.classList.add('sel-bottom');
+                        if (c === minCol) td.classList.add('sel-left');
+                        if (c === maxCol) td.classList.add('sel-right');
+
+                        // Attach drag fill handle to bottom-right corner cell of selection
+                        if (r === maxRow && c === maxCol && !isEditingInline) {
+                            const handle = document.createElement('div');
+                            handle.className = 'fill-handle';
+                            handle.title = 'Drag to autofill cells';
+                            handle.addEventListener('mousedown', (e) => {
+                                e.stopPropagation();
+                                isFillDragging = true;
+                                fillTargetEndRow = maxRow;
+                                fillTargetEndCol = maxCol;
+                            });
+                            td.appendChild(handle);
+                        }
+                    }
+                }
+
+                const activeId = getCellId(activeRow, activeCol);
+                const activeTd = cellDomCache[activeId];
+                if (activeTd) {
+                    activeTd.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                }
+
+                addressBox.textContent = isSingleCell
+                    ? activeId
+                    : `${getCellId(minRow, minCol)}:${getCellId(maxRow, maxCol)}`;
+
+                const state = getActiveSheet()[activeId];
+                formulaInput.value = state ? state.raw : '';
+                syncToolbarWithStyle(state ? state.style : defaultCellStyle());
+                updateStatusBarStats();
+            }
+
+            /**
+             * Status Bar Live Statistics (Average, Count, Sum)
+             */
+            function updateStatusBarStats() {
+                const { minRow, maxRow, minCol, maxCol } = getSelectionBounds();
+                const sheet = getActiveSheet();
+                const nums = [];
+                let nonEmptyCount = 0;
+
+                for (let r = minRow; r <= maxRow; r++) {
+                    for (let c = minCol; c <= maxCol; c++) {
+                        const st = sheet[getCellId(r, c)];
+                        if (st && st.computed !== '' && st.computed !== undefined && st.computed !== null) {
+                            nonEmptyCount++;
+                            const n = Number(st.computed);
+                            if (!isNaN(n) && isFinite(n)) nums.push(n);
+                        }
+                    }
+                }
+
+                if (nonEmptyCount <= 1) {
+                    selectionStats.textContent = '';
+                    return;
+                }
+
+                if (nums.length > 0) {
+                    const sum = nums.reduce((a, b) => a + b, 0);
+                    const avg = sum / nums.length;
+                    selectionStats.textContent = `Average: ${Number(avg.toFixed(2))}   Count: ${nonEmptyCount}   Sum: ${Number(sum.toFixed(2))}`;
+                } else {
+                    selectionStats.textContent = `Count: ${nonEmptyCount}`;
+                }
+            }
+
+            /**
+             * Drag Fill Handle Logic (Copies or Increments Values & Shifts Formulas)
+             */
+            function updateFillPreview(hoverRow, hoverCol) {
+                document.querySelectorAll('td.cell.fill-preview').forEach((el) => el.classList.remove('fill-preview'));
+                const { minRow, maxRow, minCol, maxCol } = getSelectionBounds();
+
+                if (hoverRow > maxRow) {
+                    fillTargetEndRow = hoverRow;
+                    fillTargetEndCol = maxCol;
+                    for (let r = maxRow + 1; r <= hoverRow; r++) {
+                        for (let c = minCol; c <= maxCol; c++) {
+                            cellDomCache[getCellId(r, c)]?.classList.add('fill-preview');
+                        }
+                    }
+                } else if (hoverCol > maxCol) {
+                    fillTargetEndRow = maxRow;
+                    fillTargetEndCol = hoverCol;
+                    for (let r = minRow; r <= maxRow; r++) {
+                        for (let c = maxCol + 1; c <= hoverCol; c++) {
+                            cellDomCache[getCellId(r, c)]?.classList.add('fill-preview');
+                        }
+                    }
+                }
+            }
+
+            function commitFillDrag() {
+                document.querySelectorAll('td.cell.fill-preview').forEach((el) => el.classList.remove('fill-preview'));
+                const { minRow, maxRow, minCol, maxCol } = getSelectionBounds();
+                if (fillTargetEndRow <= maxRow && fillTargetEndCol <= maxCol) return;
+
+                pushUndoSnapshot();
+                const sheet = getActiveSheet();
+
+                if (fillTargetEndRow > maxRow) {
+                    const spanRows = maxRow - minRow + 1;
+                    for (let r = maxRow + 1; r <= fillTargetEndRow; r++) {
+                        const offset = r - minRow;
+                        const srcRow = minRow + (offset % spanRows);
+                        for (let c = minCol; c <= maxCol; c++) {
+                            const srcState = sheet[getCellId(srcRow, c)];
+                            const dstId = getCellId(r, c);
+                            if (!srcState) {
+                                delete sheet[dstId];
+                                continue;
+                            }
+                            const dstState = getCellState(dstId);
+                            dstState.style = cloneStyle(srcState.style);
+                            dstState.raw = shiftCellContent(srcState.raw, r - srcRow, 0);
+                        }
+                    }
+                    renderActiveSheet();
+                    setSelectionRange(minRow, minCol, fillTargetEndRow, maxCol, activeRow, activeCol);
+                } else if (fillTargetEndCol > maxCol) {
+                    const spanCols = maxCol - minCol + 1;
+                    for (let c = maxCol + 1; c <= fillTargetEndCol; c++) {
+                        const offset = c - minCol;
+                        const srcCol = minCol + (offset % spanCols);
+                        for (let r = minRow; r <= maxRow; r++) {
+                            const srcState = sheet[getCellId(r, srcCol)];
+                            const dstId = getCellId(r, c);
+                            if (!srcState) {
+                                delete sheet[dstId];
+                                continue;
+                            }
+                            const dstState = getCellState(dstId);
+                            dstState.style = cloneStyle(srcState.style);
+                            dstState.raw = shiftCellContent(srcState.raw, 0, c - srcCol);
+                        }
+                    }
+                    renderActiveSheet();
+                    setSelectionRange(minRow, minCol, maxRow, fillTargetEndCol, activeRow, activeCol);
+                }
+            }
+
+            function shiftCellContent(raw, rowDelta, colDelta) {
+                if (!raw) return '';
+                const str = String(raw);
+                if (str.startsWith('=')) {
+                    // Shift relative references (skip $ locked references)
+                    return str.replace(/(\$?)([A-Z])(\$?)(\d+)/gi, (_, lockCol, colLet, lockRow, rowNum) => {
+                        let newColIdx = letterToColIndex(colLet);
+                        let newRowNum = parseInt(rowNum, 10);
+                        if (!lockCol) newColIdx = Math.max(0, Math.min(NUM_COLS - 1, newColIdx + colDelta));
+                        if (!lockRow) newRowNum = Math.max(1, Math.min(NUM_ROWS, newRowNum + rowDelta));
+                        return `${lockCol}${colIndexToLetter(newColIdx)}${lockRow}${newRowNum}`;
+                    });
+                }
+                // If pure number, increment by delta
+                if (!isNaN(Number(str)) && str.trim() !== '') {
+                    return String(Number(str) + rowDelta + colDelta);
+                }
+                return str;
+            }
+
+            /**
+             * Comprehensive Formula Evaluation Engine
+             */
+            function resolveSheetAndCell(token) {
+                const parts = token.split('!');
+                if (parts.length === 2) {
+                    const sName = parts[0].replace(/^'|'$/g, '');
+                    if (!workbook[sName]) return null;
+                    const parsed = parseCellId(parts[1]);
+                    if (!parsed) return null;
+                    return { sheetName: sName, cellId: getCellId(parsed.row, parsed.col) };
+                }
+                const parsed = parseCellId(token);
+                if (!parsed) return null;
+                return { sheetName: currentSheetName, cellId: getCellId(parsed.row, parsed.col) };
+            }
+
+            function collectRangeArguments(argString, visited) {
+                const items = [];
+                const tokens = argString.split(',');
+                for (const rawTok of tokens) {
+                    const tok = rawTok.trim();
+                    if (!tok) continue;
+
+                    if (tok.includes(':')) {
+                        const [left, right] = tok.split(':');
+                        let targetSheet = currentSheetName;
+                        let startStr = left.trim();
+                        if (startStr.includes('!')) {
+                            const [sPart, cPart] = startStr.split('!');
+                            targetSheet = sPart.replace(/^'|'$/g, '');
+                            startStr = cPart;
+                        }
+                        const start = parseCellId(startStr);
+                        const end = parseCellId(right.trim());
+                        if (!start || !end || !workbook[targetSheet]) {
+                            throw new Error('#REF!');
+                        }
+                        const r1 = Math.min(start.row, end.row);
+                        const r2 = Math.max(start.row, end.row);
+                        const c1 = Math.min(start.col, end.col);
+                        const c2 = Math.max(start.col, end.col);
+
+                        for (let r = r1; r <= r2; r++) {
+                            for (let c = c1; c <= c2; c++) {
+                                const cid = getCellId(r, c);
+                                items.push(evaluateCell(cid, new Set(visited), targetSheet));
+                            }
+                        }
+                    } else {
+                        const resolved = resolveSheetAndCell(tok);
+                        if (resolved) {
+                            items.push(evaluateCell(resolved.cellId, new Set(visited), resolved.sheetName));
+                        } else if ((tok.startsWith('"') && tok.endsWith('"')) || (tok.startsWith("'") && tok.endsWith("'"))) {
+                            items.push(tok.slice(1, -1));
+                        } else if (!isNaN(Number(tok))) {
+                            items.push(Number(tok));
+                        } else {
+                            items.push(evalMathExpression(tok, visited));
+                        }
+                    }
+                }
+                return items;
+            }
+
+            function evalMathExpression(expr, visited) {
+                let processed = expr.trim();
+
+                // Replace zero-arg functions TODAY(), NOW(), PI()
+                processed = processed.replace(/\bPI\s*\(\s*\)/gi, () => Math.PI);
+                processed = processed.replace(/\bTODAY\s*\(\s*\)/gi, () => `"${new Date().toLocaleDateString()}"`);
+                processed = processed.replace(/\bNOW\s*\(\s*\)/gi, () => `"${new Date().toLocaleString()}"`);
+
+                // Iteratively evaluate innermost function calls
+                const fnRegex = /\b([A-Z0-9_]+)\s*\(([^()]*)\)/i;
+                let safetyCounter = 0;
+                while (fnRegex.test(processed) && safetyCounter < 40) {
+                    safetyCounter++;
+                    processed = processed.replace(fnRegex, (_, fnRaw, argsRaw) => {
+                        const fn = fnRaw.toUpperCase();
+                        const args = collectRangeArguments(argsRaw, visited);
+                        const nums = args
+                            .filter((v) => v !== '' && v !== null && v !== undefined && !isNaN(Number(v)) && isFinite(Number(v)))
+                            .map(Number);
+
+                        switch (fn) {
+                            case 'SUM':
+                                return nums.reduce((a, b) => a + b, 0);
+                            case 'AVERAGE':
+                            case 'AVG':
+                                return nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : '#DIV/0!';
+                            case 'MIN':
+                                return nums.length ? Math.min(...nums) : 0;
+                            case 'MAX':
+                                return nums.length ? Math.max(...nums) : 0;
+                            case 'COUNT':
+                                return nums.length;
+                            case 'COUNTA':
+                                return args.filter((v) => v !== '' && v !== null && v !== undefined).length;
+                            case 'ABS':
+                                return nums.length ? Math.abs(nums[0]) : 0;
+                            case 'SQRT':
+                                return nums.length && nums[0] >= 0 ? Math.sqrt(nums[0]) : '#NUM!';
+                            case 'ROUND':
+                                return nums.length ? Number(nums[0].toFixed(nums[1] || 0)) : 0;
+                            case 'POWER':
+                                return nums.length >= 2 ? Math.pow(nums[0], nums[1]) : 0;
+                            case 'MOD':
+                                return nums.length >= 2 && nums[1] !== 0 ? nums[0] % nums[1] : '#DIV/0!';
+                            case 'CONCAT':
+                            case 'CONCATENATE':
+                                return `"${args.map((v) => (v === null || v === undefined ? '' : String(v))).join('')}"`;
+                            case 'LEN':
+                                return args.length ? String(args[0]).length : 0;
+                            case 'UPPER':
+                                return args.length ? `"${String(args[0]).toUpperCase()}"` : '""';
+                            case 'LOWER':
+                                return args.length ? `"${String(args[0]).toLowerCase()}"` : '""';
+                            case 'TRIM':
+                                return args.length ? `"${String(args[0]).trim()}"` : '""';
+                            case 'LEFT':
+                                return args.length ? `"${String(args[0]).slice(0, Number(args[1] || 1))}"` : '""';
+                            case 'RIGHT':
+                                return args.length ? `"${String(args[0]).slice(-Number(args[1] || 1))}"` : '""';
+                            case 'AND':
+                                return args.every(Boolean) ? 1 : 0;
+                            case 'OR':
+                                return args.some(Boolean) ? 1 : 0;
+                            case 'IF': {
+                                const condStr = argsRaw.split(',')[0] || '0';
+                                const condVal = evalMathExpression(condStr, visited);
+                                return condVal ? (args[1] !== undefined ? JSON.stringify(args[1]) : 1) : (args[2] !== undefined ? JSON.stringify(args[2]) : 0);
+                            }
+                            default:
+                                throw new Error('#NAME?');
+                        }
+                    });
+                }
+
+                // If result is already a quoted string
+                if (/^".*"$/.test(processed.trim())) {
+                    return processed.trim().slice(1, -1);
+                }
+
+                // Replace Cross-Sheet and Local Cell References (e.g., Sheet2!A1, $A$1, B4)
+                processed = processed.replace(/\b(?:([A-Za-z0-9_]+)!)?(\$?[A-Z]\$?\d+)\b/g, (_, sName, cRef) => {
+                    const targetSheet = sName || currentSheetName;
+                    if (!workbook[targetSheet]) throw new Error('#REF!');
+                    const parsed = parseCellId(cRef);
+                    if (!parsed) throw new Error('#NAME?');
+                    const cid = getCellId(parsed.row, parsed.col);
+                    const val = evaluateCell(cid, new Set(visited), targetSheet);
+
+                    if (typeof val === 'string' && val.startsWith('#')) throw new Error(val);
+                    if (val === '' || val === null || val === undefined) return 0;
+                    const n = Number(val);
+                    if (isNaN(n)) return JSON.stringify(String(val));
+                    return n;
+                });
+
+                // Support Excel exponentiation ^ and comparison operators =, <>
+                processed = processed.replace(/\^/g, '**');
+                processed = processed.replace(/<>/g, '!=');
+                processed = processed.replace(/([^<>!])=([^=])/g, '$1==$2');
+
+                const result = Function(`"use strict"; return (${processed});`)();
+                if (typeof result === 'string') return result;
+                if (typeof result === 'boolean') return result ? 1 : 0;
+                if (typeof result !== 'number' || !isFinite(result) || isNaN(result)) {
+                    throw new Error('#DIV/0!');
+                }
+                return Math.round(result * 1e10) / 1e10;
+            }
+
+            function evaluateCell(cellId, visited = new Set(), sheetName = currentSheetName) {
+                const visitKey = `${sheetName}!${cellId}`;
+                if (visited.has(visitKey)) return '#REF!';
+                visited.add(visitKey);
+
+                const sheet = workbook[sheetName];
+                if (!sheet || !sheet[cellId]) return '';
+
+                const state = sheet[cellId];
+                const raw = (state.raw ?? '').toString().trim();
+
+                if (!raw.startsWith('=')) {
+                    state.computed = raw;
+                    return raw;
+                }
+
+                const expr = raw.substring(1).trim();
+                if (!expr) {
+                    state.computed = '';
+                    return '';
+                }
+
+                try {
+                    const val = evalMathExpression(expr, visited);
+                    state.computed = val;
+                    return val;
+                } catch (err) {
+                    const code = err && err.message && err.message.startsWith('#') ? err.message : '#ERR!';
+                    state.computed = code;
+                    return code;
+                }
+            }
+
+            /**
+             * Format Computed Display Text Based on Number Format Settings
+             */
+            function formatDisplayValue(val, style, raw) {
+                if (showFormulasMode && raw && String(raw).startsWith('=')) {
+                    return raw;
+                }
+                if (val === '' || val === null || val === undefined) return '';
+                if (typeof val === 'string' && val.startsWith('#')) return val;
+
+                const num = Number(val);
+                if (isNaN(num) || !isFinite(num) || style.numFormat === 'general') {
+                    return String(val);
+                }
+
+                const dec = Math.max(0, Math.min(8, style.decimals ?? 2));
+                switch (style.numFormat) {
+                    case 'number':
+                        return num.toFixed(dec);
+                    case 'currency':
+                        return '$' + num.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+                    case 'percent':
+                        return (num * 100).toFixed(dec) + '%';
+                    case 'comma':
+                        return num.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+                    default:
+                        return String(val);
+                }
+            }
+
+            /**
+             * Render Active Sheet Cells Fast
+             */
+            function renderActiveSheet() {
+                const sheet = getActiveSheet();
+                for (let r = 1; r <= NUM_ROWS; r++) {
+                    for (let c = 0; c < NUM_COLS; c++) {
+                        const cellId = getCellId(r, c);
+                        const td = cellDomCache[cellId];
+                        const state = sheet[cellId];
+
+                        if (!state) {
+                            td.textContent = '';
+                            td.removeAttribute('style');
+                            continue;
+                        }
+
+                        const val = evaluateCell(cellId);
+                        td.textContent = formatDisplayValue(val, state.style, state.raw);
+                        applyCellStylesToDom(td, state.style, val);
+                    }
+                }
+                updateStatusBarStats();
+            }
+
+            function applyCellStylesToDom(td, style, displayValue) {
+                td.style.fontFamily = style.fontFamily || 'Calibri, sans-serif';
+                td.style.fontSize = `${style.fontSize || 14}px`;
+                td.style.fontWeight = style.bold ? '700' : '400';
+                td.style.fontStyle = style.italic ? 'italic' : 'normal';
+
+                const decs = [];
+                if (style.underline) decs.push('underline');
+                if (style.strike) decs.push('line-through');
+                td.style.textDecoration = decs.length ? decs.join(' ') : 'none';
+
+                td.style.color = style.color || '#000000';
+                td.style.backgroundColor = style.bgColor || '#ffffff';
+                td.style.verticalAlign = style.vAlign || 'middle';
+                td.style.whiteSpace = style.wrapText ? 'normal' : 'nowrap';
+
+                if (style.borderAll) {
+                    td.style.borderRight = '1px solid #334155';
+                    td.style.borderBottom = '1px solid #334155';
+                } else {
+                    td.style.borderRight = '';
+                    td.style.borderBottom = '';
+                }
+
+                if (style.align) {
+                    td.style.textAlign = style.align;
+                } else {
+                    const isNumeric = displayValue !== '' && !isNaN(Number(displayValue)) && isFinite(Number(displayValue));
+                    td.style.textAlign = isNumeric ? 'right' : 'left';
+                }
+            }
+
+            function syncToolbarWithStyle(style) {
+                document.getElementById('select-font-family').value = style.fontFamily || 'Calibri, sans-serif';
+                document.getElementById('select-font-size').value = style.fontSize || '14';
+                document.getElementById('btn-bold').classList.toggle('active', Boolean(style.bold));
+                document.getElementById('btn-italic').classList.toggle('active', Boolean(style.italic));
+                document.getElementById('btn-underline').classList.toggle('active', Boolean(style.underline));
+                document.getElementById('btn-strike').classList.toggle('active', Boolean(style.strike));
+                document.getElementById('btn-borders').classList.toggle('active', Boolean(style.borderAll));
+                document.getElementById('btn-wrap-text').classList.toggle('active', Boolean(style.wrapText));
+
+                document.getElementById('input-bg-color').value = style.bgColor || '#ffffff';
+                document.getElementById('input-text-color').value = style.color || '#000000';
+
+                document.getElementById('btn-align-left').classList.toggle('active', style.align === 'left');
+                document.getElementById('btn-align-center').classList.toggle('active', style.align === 'center');
+                document.getElementById('btn-align-right').classList.toggle('active', style.align === 'right');
+
+                document.getElementById('btn-valign-top').classList.toggle('active', style.vAlign === 'top');
+                document.getElementById('btn-valign-middle').classList.toggle('active', style.vAlign === 'middle');
+                document.getElementById('btn-valign-bottom').classList.toggle('active', style.vAlign === 'bottom');
+
+                document.getElementById('select-num-format').value = style.numFormat || 'general';
+            }
+
+            /**
+             * Batch Apply Style or Value Updates to Selected Range
+             */
+            function applyStyleToSelection(updater) {
+                const { minRow, maxRow, minCol, maxCol } = getSelectionBounds();
+                for (let r = minRow; r <= maxRow; r++) {
+                    for (let c = minCol; c <= maxCol; c++) {
+                        const cid = getCellId(r, c);
+                        const st = getCellState(cid);
+                        updater(st.style);
+                        const td = cellDomCache[cid];
+                        td.textContent = formatDisplayValue(st.computed, st.style, st.raw);
+                        applyCellStylesToDom(td, st.style, st.computed);
+                    }
+                }
+                const activeSt = getActiveSheet()[getCellId(activeRow, activeCol)];
+                if (activeSt) syncToolbarWithStyle(activeSt.style);
+            }
+
+            function updateCellValue(row, col, newValue, recordHistory = true) {
+                if (recordHistory) pushUndoSnapshot();
+                const cellId = getCellId(row, col);
+                const sheet = getActiveSheet();
+
+                if (newValue === '' && (!sheet[cellId] || isDefaultStyle(sheet[cellId].style))) {
+                    delete sheet[cellId];
+                } else {
+                    const state = getCellState(cellId);
+                    state.raw = newValue;
+                }
+
+                renderActiveSheet();
+                updateSelectionVisuals();
+            }
+
+            /**
+             * Inline Cell Editor
+             */
+            function startInlineEdit(row, col, initialChar = null) {
+                if (isEditingInline) return;
+                isEditingInline = true;
+                statusMode.textContent = 'Edit';
+
+                const cellId = getCellId(row, col);
+                const td = cellDomCache[cellId];
+                const state = getActiveSheet()[cellId];
+
+                td.querySelectorAll('.fill-handle').forEach((h) => h.remove());
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'cell-editor';
+                input.value = initialChar !== null ? initialChar : (state ? state.raw : '');
+
+                td.textContent = '';
+                td.appendChild(input);
+                input.focus();
+
+                input.addEventListener('input', () => {
+                    formulaInput.value = input.value;
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        commitInlineEdit();
+                        const nextR = e.shiftKey ? activeRow - 1 : activeRow + 1;
+                        setSelectionRange(nextR, activeCol, nextR, activeCol, nextR, activeCol);
+                    } else if (e.key === 'Tab') {
+                        e.preventDefault();
+                        commitInlineEdit();
+                        const nextC = e.shiftKey ? activeCol - 1 : activeCol + 1;
+                        setSelectionRange(activeRow, nextC, activeRow, nextC, activeRow, nextC);
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        cancelInlineEdit();
+                    }
+                });
+
+                input.addEventListener('blur', () => {
+                    if (isEditingInline) commitInlineEdit();
+                });
+            }
+
+            function commitInlineEdit() {
+                if (!isEditingInline) return;
+                const cellId = getCellId(activeRow, activeCol);
+                const td = cellDomCache[cellId];
+                const editor = td.querySelector('.cell-editor');
+                const val = editor ? editor.value : '';
+
+                isEditingInline = false;
+                statusMode.textContent = 'Ready';
+                updateCellValue(activeRow, activeCol, val, true);
+            }
+
+            function cancelInlineEdit() {
+                if (!isEditingInline) return;
+                isEditingInline = false;
+                statusMode.textContent = 'Ready';
+                renderActiveSheet();
+                updateSelectionVisuals();
+            }
+
+            /**
+             * Clipboard Operations (Cut, Copy, Paste)
+             */
+            function copySelection(mode = 'copy') {
+                const { minRow, maxRow, minCol, maxCol } = getSelectionBounds();
+                const sheet = getActiveSheet();
+                const rows = [];
+
+                for (let r = minRow; r <= maxRow; r++) {
+                    const rowArr = [];
+                    for (let c = minCol; c <= maxCol; c++) {
+                        const st = sheet[getCellId(r, c)];
+                        rowArr.push(st ? { raw: st.raw, style: cloneStyle(st.style) } : null);
+                    }
+                    rows.push(rowArr);
+                }
+
+                internalClipboard = {
+                    mode,
+                    srcSheet: currentSheetName,
+                    minRow,
+                    minCol,
+                    rows
+                };
+
+                // Also write TSV to system clipboard if permitted
+                const tsv = rows.map((r) => r.map((cell) => (cell ? cell.raw : '')).join('\t')).join('\n');
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(tsv).catch(() => {});
+                }
+                showStatus(mode === 'cut' ? 'Cut selection to clipboard' : 'Copied selection to clipboard');
+            }
+
+            function pasteSelection() {
+                if (!internalClipboard) return;
+                pushUndoSnapshot();
+
+                const sheet = getActiveSheet();
+                const { rows, mode, srcSheet, minRow: srcMinR, minCol: srcMinC } = internalClipboard;
+
+                if (mode === 'cut' && workbook[srcSheet]) {
+                    for (let rIdx = 0; rIdx < rows.length; rIdx++) {
+                        for (let cIdx = 0; cIdx < rows[rIdx].length; cIdx++) {
+                            delete workbook[srcSheet][getCellId(srcMinR + rIdx, srcMinC + cIdx)];
+                        }
+                    }
+                }
+
+                for (let rIdx = 0; rIdx < rows.length; rIdx++) {
+                    const targetR = activeRow + rIdx;
+                    if (targetR > NUM_ROWS) break;
+                    for (let cIdx = 0; cIdx < rows[rIdx].length; cIdx++) {
+                        const targetC = activeCol + cIdx;
+                        if (targetC >= NUM_COLS) break;
+                        const item = rows[rIdx][cIdx];
+                        const dstId = getCellId(targetR, targetC);
+                        if (!item) {
+                            delete sheet[dstId];
+                        } else {
+                            const st = getCellState(dstId);
+                            st.raw = mode === 'copy'
+                                ? shiftCellContent(item.raw, targetR - (srcMinR + rIdx), targetC - (srcMinC + cIdx))
+                                : item.raw;
+                            st.style = cloneStyle(item.style);
+                        }
+                    }
+                }
+
+                if (mode === 'cut') internalClipboard = null;
+                renderActiveSheet();
+                updateSelectionVisuals();
+                showStatus('Pasted cells');
+            }
+
+            /**
+             * Insert / Delete Rows & Columns
+             */
+            function insertRowAbove() {
+                pushUndoSnapshot();
+                const sheet = getActiveSheet();
+                const newSheet = {};
+                Object.keys(sheet).forEach((cid) => {
+                    const p = parseCellId(cid);
+                    if (!p) return;
+                    if (p.row >= activeRow) {
+                        if (p.row + 1 <= NUM_ROWS) {
+                            newSheet[getCellId(p.row + 1, p.col)] = sheet[cid];
+                        }
+                    } else {
+                        newSheet[cid] = sheet[cid];
+                    }
+                });
+                workbook[currentSheetName] = newSheet;
+                renderActiveSheet();
+                updateSelectionVisuals();
+                showStatus(`Inserted row at ${activeRow}`);
+            }
+
+            function deleteCurrentRow() {
+                pushUndoSnapshot();
+                const sheet = getActiveSheet();
+                const newSheet = {};
+                Object.keys(sheet).forEach((cid) => {
+                    const p = parseCellId(cid);
+                    if (!p || p.row === activeRow) return;
+                    if (p.row > activeRow) {
+                        newSheet[getCellId(p.row - 1, p.col)] = sheet[cid];
+                    } else {
+                        newSheet[cid] = sheet[cid];
+                    }
+                });
+                workbook[currentSheetName] = newSheet;
+                renderActiveSheet();
+                updateSelectionVisuals();
+                showStatus(`Deleted row ${activeRow}`);
+            }
+
+            function insertColumnLeft() {
+                pushUndoSnapshot();
+                const sheet = getActiveSheet();
+                const newSheet = {};
+                Object.keys(sheet).forEach((cid) => {
+                    const p = parseCellId(cid);
+                    if (!p) return;
+                    if (p.col >= activeCol) {
+                        if (p.col + 1 < NUM_COLS) {
+                            newSheet[getCellId(p.row, p.col + 1)] = sheet[cid];
+                        }
+                    } else {
+                        newSheet[cid] = sheet[cid];
+                    }
+                });
+                workbook[currentSheetName] = newSheet;
+                renderActiveSheet();
+                updateSelectionVisuals();
+                showStatus(`Inserted column ${colIndexToLetter(activeCol)}`);
+            }
+
+            function deleteCurrentColumn() {
+                pushUndoSnapshot();
+                const sheet = getActiveSheet();
+                const newSheet = {};
+                Object.keys(sheet).forEach((cid) => {
+                    const p = parseCellId(cid);
+                    if (!p || p.col === activeCol) return;
+                    if (p.col > activeCol) {
+                        newSheet[getCellId(p.row, p.col - 1)] = sheet[cid];
+                    } else {
+                        newSheet[cid] = sheet[cid];
+                    }
+                });
+                workbook[currentSheetName] = newSheet;
+                renderActiveSheet();
+                updateSelectionVisuals();
+                showStatus(`Deleted column ${colIndexToLetter(activeCol)}`);
+            }
+
+            /**
+             * Sort Active Column A-Z or Z-A
+             */
+            function sortActiveColumn(ascending = true) {
+                pushUndoSnapshot();
+                const sheet = getActiveSheet();
+                const items = [];
+                for (let r = 1; r <= NUM_ROWS; r++) {
+                    const cid = getCellId(r, activeCol);
+                    const st = sheet[cid];
+                    if (st && st.computed !== '' && st.computed !== undefined) {
+                        items.push({ raw: st.raw, computed: st.computed, style: cloneStyle(st.style) });
+                    }
+                }
+                if (items.length === 0) return;
+
+                items.sort((a, b) => {
+                    const numA = Number(a.computed);
+                    const numB = Number(b.computed);
+                    if (!isNaN(numA) && !isNaN(numB)) {
+                        return ascending ? numA - numB : numB - numA;
+                    }
+                    const strA = String(a.computed).toLowerCase();
+                    const strB = String(b.computed).toLowerCase();
+                    return ascending ? strA.localeCompare(strB) : strB.localeCompare(strA);
+                });
+
+                for (let r = 1; r <= NUM_ROWS; r++) {
+                    const cid = getCellId(r, activeCol);
+                    if (r <= items.length) {
+                        sheet[cid] = {
+                            raw: items[r - 1].raw,
+                            computed: items[r - 1].computed,
+                            style: items[r - 1].style
+                        };
+                    } else {
+                        delete sheet[cid];
+                    }
+                }
+                renderActiveSheet();
+                updateSelectionVisuals();
+                showStatus(`Sorted Column ${colIndexToLetter(activeCol)} ${ascending ? 'A-Z' : 'Z-A'}`);
+            }
+
+            /**
+             * HTML5 Canvas Chart Generator from Selected Range
+             */
+            function openChartModal(type = 'bar') {
+                const { minRow, maxRow, minCol, maxCol } = getSelectionBounds();
+                const sheet = getActiveSheet();
+                const labels = [];
+                const values = [];
+
+                for (let r = minRow; r <= maxRow; r++) {
+                    for (let c = minCol; c <= maxCol; c++) {
+                        const cid = getCellId(r, c);
+                        const st = sheet[cid];
+                        if (st && st.computed !== '' && !isNaN(Number(st.computed))) {
+                            labels.push(cid);
+                            values.push(Number(st.computed));
+                        }
+                    }
+                }
+
+                if (values.length === 0) {
+                    showStatus('Select numeric cells first to generate a chart');
+                    return;
+                }
+
+                const modal = document.getElementById('chart-modal');
+                const canvas = document.getElementById('excel-chart-canvas');
+                const ctx = canvas.getContext('2d');
+                document.getElementById('chart-modal-title').textContent =
+                    `${type === 'bar' ? 'Column Chart' : 'Line Chart'} (${addressBox.textContent})`;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const padL = 50, padR = 25, padT = 25, padB = 40;
+                const chartW = canvas.width - padL - padR;
+                const chartH = canvas.height - padT - padB;
+                const maxVal = Math.max(...values, 0);
+                const minVal = Math.min(...values, 0);
+                const range = maxVal - minVal || 1;
+
+                // Gridlines
+                ctx.strokeStyle = '#d0d7e5';
+                ctx.lineWidth = 1;
+                ctx.font = '11px Segoe UI, sans-serif';
+                ctx.fillStyle = '#475569';
+                for (let i = 0; i <= 4; i++) {
+                    const y = padT + (chartH * i) / 4;
+                    const labelVal = (maxVal - (range * i) / 4).toFixed(1);
+                    ctx.beginPath();
+                    ctx.moveTo(padL, y);
+                    ctx.lineTo(padL + chartW, y);
+                    ctx.stroke();
+                    ctx.fillText(labelVal, 6, y + 4);
+                }
+
+                const zeroY = padT + ((maxVal - 0) / range) * chartH;
+                const step = chartW / values.length;
+
+                if (type === 'bar') {
+                    values.forEach((v, i) => {
+                        const barW = Math.max(8, step * 0.6);
+                        const x = padL + i * step + (step - barW) / 2;
+                        const valY = padT + ((maxVal - v) / range) * chartH;
+                        const topY = Math.min(valY, zeroY);
+                        const barH = Math.max(2, Math.abs(zeroY - valY));
+
+                        const grad = ctx.createLinearGradient(0, topY, 0, topY + barH);
+                        grad.addColorStop(0, '#4f81bd');
+                        grad.addColorStop(1, '#2b579a');
+                        ctx.fillStyle = grad;
+                        ctx.fillRect(x, topY, barW, barH);
+
+                        ctx.fillStyle = '#1e293b';
+                        ctx.fillText(labels[i], x + barW / 2 - 8, padT + chartH + 18);
+                    });
+                } else {
+                    ctx.strokeStyle = '#2b579a';
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    values.forEach((v, i) => {
+                        const x = padL + i * step + step / 2;
+                        const y = padT + ((maxVal - v) / range) * chartH;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    });
+                    ctx.stroke();
+
+                    values.forEach((v, i) => {
+                        const x = padL + i * step + step / 2;
+                        const y = padT + ((maxVal - v) / range) * chartH;
+                        ctx.fillStyle = '#1e7145';
+                        ctx.beginPath();
+                        ctx.arc(x, y, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#1e293b';
+                        ctx.fillText(labels[i], x - 8, padT + chartH + 18);
+                    });
+                }
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            /**
+             * Multi-Sheet Tabs Rendering & Management
+             */
+            function renderSheetTabs() {
+                sheetTabsList.innerHTML = '';
+                sheetOrder.forEach((name) => {
+                    const tab = document.createElement('div');
+                    tab.className = `sheet-tab${name === currentSheetName ? ' active' : ''}`;
+                    tab.textContent = name;
+
+                    tab.addEventListener('click', () => {
+                        if (isEditingInline) commitInlineEdit();
+                        if (name === currentSheetName) return;
+                        currentSheetName = name;
+                        renderSheetTabs();
+                        renderActiveSheet();
+                        setSelectionRange(1, 0, 1, 0, 1, 0);
+                    });
+
+                    tab.addEventListener('dblclick', () => renameSheet(name));
+
+                    tab.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        contextTargetSheet = name;
+                        const menu = document.getElementById('sheet-context-menu');
+                        menu.style.left = `${e.clientX}px`;
+                        menu.style.top = `${e.clientY - 95}px`;
+                        menu.classList.remove('hidden');
+                    });
+
+                    sheetTabsList.appendChild(tab);
+                });
+            }
+
+            function addNewSheet() {
+                let idx = sheetOrder.length + 1;
+                while (workbook[`Sheet${idx}`]) idx++;
+                const newName = `Sheet${idx}`;
+                sheetOrder.push(newName);
+                workbook[newName] = {};
+                currentSheetName = newName;
+                renderSheetTabs();
+                renderActiveSheet();
+                setSelectionRange(1, 0, 1, 0, 1, 0);
+                showStatus(`Added ${newName}`);
+            }
+
+            function renameSheet(oldName) {
+                const tabEl = Array.from(sheetTabsList.children).find((el) => el.textContent === oldName);
+                if (!tabEl) return;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = oldName;
+                input.className = 'w-20 text-xs px-1 border border-[#2b579a] outline-none bg-white text-black';
+                tabEl.textContent = '';
+                tabEl.appendChild(input);
+                input.focus();
+                input.select();
+
+                const finishRename = () => {
+                    const clean = input.value.trim().replace(/[!:'"]/g, '');
+                    if (clean && clean !== oldName && !workbook[clean]) {
+                        workbook[clean] = workbook[oldName];
+                        delete workbook[oldName];
+                        sheetOrder = sheetOrder.map((s) => (s === oldName ? clean : s));
+                        if (currentSheetName === oldName) currentSheetName = clean;
+                    }
+                    renderSheetTabs();
+                };
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') finishRename();
+                    if (e.key === 'Escape') renderSheetTabs();
+                });
+                input.addEventListener('blur', finishRename);
+            }
+
+            /**
+             * CSV Export & Import
+             */
+            function exportCsv() {
+                const sheet = getActiveSheet();
+                let maxRowUsed = 1, maxColUsed = 0;
+
+                for (let r = 1; r <= NUM_ROWS; r++) {
+                    for (let c = 0; c < NUM_COLS; c++) {
+                        const st = sheet[getCellId(r, c)];
+                        if (st && st.computed !== '' && st.computed !== undefined) {
+                            if (r > maxRowUsed) maxRowUsed = r;
+                            if (c > maxColUsed) maxColUsed = c;
+                        }
+                    }
+                }
+
+                const lines = [];
+                for (let r = 1; r <= maxRowUsed; r++) {
+                    const rowVals = [];
+                    for (let c = 0; c <= maxColUsed; c++) {
+                        const st = sheet[getCellId(r, c)];
+                        let val = st && st.computed !== undefined ? String(st.computed) : '';
+                        if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+                            val = `"${val.replace(/"/g, '""')}"`;
+                        }
+                        rowVals.push(val);
+                    }
+                    lines.push(rowVals.join(','));
+                }
+
+                const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `${currentSheetName}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                showStatus(`Exported ${currentSheetName}.csv`);
+            }
+
+            /**
+             * Event Wiring for Ribbon, Menus, Keyboard, Mouse & Zoom
+             */
+            document.addEventListener('mouseup', () => {
+                if (isSelectingDrag) isSelectingDrag = false;
+                if (isFillDragging) {
+                    isFillDragging = false;
+                    commitFillDrag();
+                }
+            });
+
+            // Hide floating menus on click outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#fileMenuBtn') && !e.target.closest('#file-menu-dropdown')) {
+                    document.getElementById('file-menu-dropdown').classList.add('hidden');
+                }
+                if (!e.target.closest('#cell-context-menu')) {
+                    document.getElementById('cell-context-menu').classList.add('hidden');
+                }
+                if (!e.target.closest('#sheet-context-menu')) {
+                    document.getElementById('sheet-context-menu').classList.add('hidden');
+                }
+            });
+
+            // Ribbon Tab Switching
+            document.querySelectorAll('.ribbon-tab').forEach((tab) => {
+                tab.addEventListener('click', () => {
+                    const target = tab.dataset.ribbonTab;
+                    document.querySelectorAll('.ribbon-tab').forEach((t) => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.querySelectorAll('.ribbon-body').forEach((b) => b.classList.add('hidden-tab'));
+                    document.getElementById(`ribbon-${target}`)?.classList.remove('hidden-tab');
+                });
+            });
+
+            // File Backstage Menu
+            document.getElementById('fileMenuBtn').addEventListener('click', () => {
+                document.getElementById('file-menu-dropdown').classList.toggle('hidden');
+            });
+
+            document.getElementById('menu-new-workbook').addEventListener('click', () => {
+                sheetOrder = ['Sheet1', 'Sheet2', 'Sheet3'];
+                workbook = { Sheet1: {}, Sheet2: {}, Sheet3: {} };
+                currentSheetName = 'Sheet1';
+                undoStack.length = 0;
+                redoStack.length = 0;
+                renderSheetTabs();
+                renderActiveSheet();
+                setSelectionRange(1, 0, 1, 0, 1, 0);
+                document.getElementById('file-menu-dropdown').classList.add('hidden');
+                showStatus('Created new blank workbook');
+            });
+
+            document.getElementById('menu-open-csv').addEventListener('click', () => {
+                document.getElementById('file-menu-dropdown').classList.add('hidden');
+                document.getElementById('importCsvInput').click();
+            });
+
+            document.getElementById('menu-save-csv').addEventListener('click', () => {
+                document.getElementById('file-menu-dropdown').classList.add('hidden');
+                exportCsv();
+            });
+
+            document.getElementById('menu-print-sheet').addEventListener('click', () => {
+                document.getElementById('file-menu-dropdown').classList.add('hidden');
+                window.print();
+            });
+
+            document.getElementById('menu-clear-all').addEventListener('click', () => {
+                pushUndoSnapshot();
+                sheetOrder.forEach((s) => (workbook[s] = {}));
+                renderActiveSheet();
+                setSelectionRange(1, 0, 1, 0, 1, 0);
+                document.getElementById('file-menu-dropdown').classList.add('hidden');
+                showStatus('Cleared all sheets');
+            });
+
+            document.getElementById('importCsvInput').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    pushUndoSnapshot();
+                    const rows = (ev.target.result || '').split(/\r?\n/);
+                    workbook[currentSheetName] = {};
+                    rows.forEach((line, rIdx) => {
+                        if (rIdx >= NUM_ROWS || line.trim() === '') return;
+                        const cols = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(',');
+                        cols.forEach((rawCol, cIdx) => {
+                            if (cIdx >= NUM_COLS) return;
+                            const cleaned = rawCol.replace(/^"|"$/g, '').replace(/""/g, '"').trim();
+                            if (cleaned !== '') {
+                                getCellState(getCellId(rIdx + 1, cIdx)).raw = cleaned;
+                            }
+                        });
+                    });
+                    renderActiveSheet();
+                    setSelectionRange(1, 0, 1, 0, 1, 0);
+                    showStatus(`Opened ${file.name}`);
+                    e.target.value = '';
+                };
+                reader.readAsText(file);
+            });
+
+            // Grid Right-Click Context Menu
+            gridBody.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                const menu = document.getElementById('cell-context-menu');
+                menu.style.left = `${Math.min(window.innerWidth - 200, e.clientX)}px`;
+                menu.style.top = `${Math.min(window.innerHeight - 250, e.clientY)}px`;
+                menu.classList.remove('hidden');
+            });
+
+            document.querySelectorAll('#cell-context-menu .win7-menu-item').forEach((item) => {
+                item.addEventListener('click', () => {
+                    const action = item.dataset.ctx;
+                    document.getElementById('cell-context-menu').classList.add('hidden');
+                    if (action === 'cut') copySelection('cut');
+                    if (action === 'copy') copySelection('copy');
+                    if (action === 'paste') pasteSelection();
+                    if (action === 'insert-row') insertRowAbove();
+                    if (action === 'delete-row') deleteCurrentRow();
+                    if (action === 'insert-col') insertColumnLeft();
+                    if (action === 'delete-col') deleteCurrentColumn();
+                    if (action === 'clear-contents') clearSelectedContents();
+                    if (action === 'clear-formats') clearSelectedFormats();
+                });
+            });
+
+            // Sheet Context Menu Actions
+            document.querySelectorAll('#sheet-context-menu .win7-menu-item').forEach((item) => {
+                item.addEventListener('click', () => {
+                    const action = item.dataset.sheetCtx;
+                    document.getElementById('sheet-context-menu').classList.add('hidden');
+                    if (!contextTargetSheet) return;
+
+                    if (action === 'rename') renameSheet(contextTargetSheet);
+                    if (action === 'duplicate') {
+                        const copyName = `${contextTargetSheet}_2`;
+                        if (!workbook[copyName]) {
+                            sheetOrder.push(copyName);
+                            workbook[copyName] = JSON.parse(JSON.stringify(workbook[contextTargetSheet]));
+                            currentSheetName = copyName;
+                            renderSheetTabs();
+                            renderActiveSheet();
+                        }
+                    }
+                    if (action === 'delete' && sheetOrder.length > 1) {
+                        delete workbook[contextTargetSheet];
+                        sheetOrder = sheetOrder.filter((s) => s !== contextTargetSheet);
+                        if (currentSheetName === contextTargetSheet) currentSheetName = sheetOrder[0];
+                        renderSheetTabs();
+                        renderActiveSheet();
+                    }
+                });
+            });
+
+            // Ribbon Controls Wiring
+            document.getElementById('btn-undo').addEventListener('click', performUndo);
+            document.getElementById('btn-redo').addEventListener('click', performRedo);
+            document.getElementById('btn-cut').addEventListener('click', () => copySelection('cut'));
+            document.getElementById('btn-copy').addEventListener('click', () => copySelection('copy'));
+            document.getElementById('btn-paste').addEventListener('click', pasteSelection);
+
+            document.getElementById('btn-format-painter').addEventListener('click', (e) => {
+                const st = getActiveSheet()[getCellId(activeRow, activeCol)];
+                formatPainterStyle = cloneStyle(st ? st.style : defaultCellStyle());
+                e.currentTarget.classList.add('active');
+                showStatus('Format Painter active: click target cell');
+            });
+
+            document.getElementById('select-font-family').addEventListener('change', (e) => {
+                pushUndoSnapshot();
+                applyStyleToSelection((s) => (s.fontFamily = e.target.value));
+            });
+            document.getElementById('select-font-size').addEventListener('change', (e) => {
+                pushUndoSnapshot();
+                applyStyleToSelection((s) => (s.fontSize = e.target.value));
+            });
+
+            const toggleSelectionBoolStyle = (prop) => {
+                pushUndoSnapshot();
+                const activeSt = getActiveSheet()[getCellId(activeRow, activeCol)];
+                const nextVal = !(activeSt && activeSt.style[prop]);
+                applyStyleToSelection((s) => (s[prop] = nextVal));
+            };
+
+            document.getElementById('btn-bold').addEventListener('click', () => toggleSelectionBoolStyle('bold'));
+            document.getElementById('btn-italic').addEventListener('click', () => toggleSelectionBoolStyle('italic'));
+            document.getElementById('btn-underline').addEventListener('click', () => toggleSelectionBoolStyle('underline'));
+            document.getElementById('btn-strike').addEventListener('click', () => toggleSelectionBoolStyle('strike'));
+            document.getElementById('btn-borders').addEventListener('click', () => toggleSelectionBoolStyle('borderAll'));
+            document.getElementById('btn-wrap-text').addEventListener('click', () => toggleSelectionBoolStyle('wrapText'));
+
+            document.getElementById('input-bg-color').addEventListener('input', (e) => {
+                applyStyleToSelection((s) => (s.bgColor = e.target.value));
+            });
+            document.getElementById('input-text-color').addEventListener('input', (e) => {
+                applyStyleToSelection((s) => (s.color = e.target.value));
+            });
+
+            document.getElementById('btn-align-left').addEventListener('click', () => { pushUndoSnapshot(); applyStyleToSelection((s) => (s.align = 'left')); });
+            document.getElementById('btn-align-center').addEventListener('click', () => { pushUndoSnapshot(); applyStyleToSelection((s) => (s.align = 'center')); });
+            document.getElementById('btn-align-right').addEventListener('click', () => { pushUndoSnapshot(); applyStyleToSelection((s) => (s.align = 'right')); });
+
+            document.getElementById('btn-valign-top').addEventListener('click', () => { pushUndoSnapshot(); applyStyleToSelection((s) => (s.vAlign = 'top')); });
+            document.getElementById('btn-valign-middle').addEventListener('click', () => { pushUndoSnapshot(); applyStyleToSelection((s) => (s.vAlign = 'middle')); });
+            document.getElementById('btn-valign-bottom').addEventListener('click', () => { pushUndoSnapshot(); applyStyleToSelection((s) => (s.vAlign = 'bottom')); });
+
+            // Number Formats
+            document.getElementById('select-num-format').addEventListener('change', (e) => {
+                pushUndoSnapshot();
+                applyStyleToSelection((s) => (s.numFormat = e.target.value));
+            });
+            document.getElementById('btn-fmt-currency').addEventListener('click', () => { pushUndoSnapshot(); applyStyleToSelection((s) => (s.numFormat = 'currency')); });
+            document.getElementById('btn-fmt-percent').addEventListener('click', () => { pushUndoSnapshot(); applyStyleToSelection((s) => (s.numFormat = 'percent')); });
+            document.getElementById('btn-fmt-comma').addEventListener('click', () => { pushUndoSnapshot(); applyStyleToSelection((s) => (s.numFormat = 'comma')); });
+            document.getElementById('btn-dec-inc').addEventListener('click', () => {
+                pushUndoSnapshot();
+                applyStyleToSelection((s) => {
+                    if (s.numFormat === 'general') s.numFormat = 'number';
+                    s.decimals = Math.min(8, (s.decimals ?? 2) + 1);
+                });
+            });
+            document.getElementById('btn-dec-dec').addEventListener('click', () => {
+                pushUndoSnapshot();
+                applyStyleToSelection((s) => {
+                    if (s.numFormat === 'general') s.numFormat = 'number';
+                    s.decimals = Math.max(0, (s.decimals ?? 2) - 1);
+                });
+            });
+
+            // Editing & Sorting
+            function clearSelectedContents() {
+                pushUndoSnapshot();
+                const { minRow, maxRow, minCol, maxCol } = getSelectionBounds();
+                const sheet = getActiveSheet();
+                for (let r = minRow; r <= maxRow; r++) {
+                    for (let c = minCol; c <= maxCol; c++) {
+                        const cid = getCellId(r, c);
+                        if (sheet[cid]) {
+                            if (isDefaultStyle(sheet[cid].style)) delete sheet[cid];
+                            else {
+                                sheet[cid].raw = '';
+                                sheet[cid].computed = '';
+                            }
+                        }
+                    }
+                }
+                renderActiveSheet();
+                updateSelectionVisuals();
+            }
+
+            function clearSelectedFormats() {
+                pushUndoSnapshot();
+                applyStyleToSelection((s) => Object.assign(s, defaultCellStyle()));
+            }
+
+            document.getElementById('btn-clear-contents').addEventListener('click', clearSelectedContents);
+            document.getElementById('btn-clear-formats').addEventListener('click', clearSelectedFormats);
+            document.getElementById('btn-sort-asc').addEventListener('click', () => sortActiveColumn(true));
+            document.getElementById('btn-sort-desc').addEventListener('click', () => sortActiveColumn(false));
+
+            document.getElementById('btn-autosum').addEventListener('click', () => {
+                const { minRow, maxRow, minCol, maxCol } = getSelectionBounds();
+                const sheet = getActiveSheet();
+                const colLet = colIndexToLetter(activeCol);
+
+                if (maxRow > minRow && minCol === maxCol) {
+                    // Sum selected vertical range into cell immediately below
+                    const targetR = Math.min(NUM_ROWS, maxRow + 1);
+                    updateCellValue(targetR, activeCol, `=SUM(${colLet}${minRow}:${colLet}${maxRow})`);
+                    setSelectionRange(targetR, activeCol, targetR, activeCol, targetR, activeCol);
+                    return;
+                }
+
+                let startRow = activeRow - 1;
+                if (startRow >= 1 && sheet[`${colLet}${startRow}`] && sheet[`${colLet}${startRow}`].computed !== '') {
+                    while (startRow > 1 && sheet[`${colLet}${startRow - 1}`] && sheet[`${colLet}${startRow - 1}`].computed !== '') {
+                        startRow--;
+                    }
+                    updateCellValue(activeRow, activeCol, `=SUM(${colLet}${startRow}:${colLet}${activeRow - 1})`);
+                } else {
+                    formulaInput.value = '=SUM()';
+                    formulaInput.focus();
+                    formulaInput.setSelectionRange(5, 5);
+                }
+            });
+
+            // Insert Tab Buttons
+            document.getElementById('btn-insert-row').addEventListener('click', insertRowAbove);
+            document.getElementById('btn-insert-col').addEventListener('click', insertColumnLeft);
+            document.getElementById('btn-delete-row').addEventListener('click', deleteCurrentRow);
+            document.getElementById('btn-delete-col').addEventListener('click', deleteCurrentColumn);
+            document.getElementById('btn-chart-bar').addEventListener('click', () => openChartModal('bar'));
+            document.getElementById('btn-chart-line').addEventListener('click', () => openChartModal('line'));
+            document.getElementById('close-chart-modal').addEventListener('click', () => {
+                document.getElementById('chart-modal').classList.add('hidden');
+                document.getElementById('chart-modal').classList.remove('flex');
+            });
+
+            // Formulas Tab Buttons
+            document.querySelectorAll('[data-insert-fn]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    formulaInput.value = btn.dataset.insertFn;
+                    formulaInput.focus();
+                });
+            });
+
+            document.getElementById('btn-show-formulas').addEventListener('click', (e) => {
+                showFormulasMode = !showFormulasMode;
+                e.currentTarget.classList.toggle('active', showFormulasMode);
+                renderActiveSheet();
+            });
+
+            document.getElementById('btn-recalc-now').addEventListener('click', () => {
+                renderActiveSheet();
+                showStatus('Workbook recalculated');
+            });
+
+            // View Tab Controls
+            document.getElementById('chk-gridlines').addEventListener('change', (e) => {
+                spreadsheetTable.classList.toggle('hide-gridlines', !e.target.checked);
+            });
+
+            document.getElementById('btn-freeze-top').addEventListener('click', (e) => {
+                const frozen = spreadsheetTable.classList.toggle('freeze-top-row');
+                e.currentTarget.classList.toggle('active', frozen);
+                showStatus(frozen ? 'Top row frozen' : 'Panes unfrozen');
+            });
+
+            // Formula Bar Input
+            formulaInput.addEventListener('focus', () => (statusMode.textContent = 'Edit'));
+            formulaInput.addEventListener('input', () => {
+                const cid = getCellId(activeRow, activeCol);
+                const st = getCellState(cid);
+                st.raw = formulaInput.value;
+                if (!isEditingInline && cellDomCache[cid]) {
+                    cellDomCache[cid].textContent = formulaInput.value;
+                }
+            });
+            formulaInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    updateCellValue(activeRow, activeCol, formulaInput.value, true);
+                    formulaInput.blur();
+                    const nextR = activeRow + 1;
+                    setSelectionRange(nextR, activeCol, nextR, activeCol, nextR, activeCol);
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    const st = getActiveSheet()[getCellId(activeRow, activeCol)];
+                    formulaInput.value = st ? st.raw : '';
+                    formulaInput.blur();
+                    renderActiveSheet();
+                    statusMode.textContent = 'Ready';
+                }
+            });
+
+            document.getElementById('fx-insert-btn').addEventListener('click', () => {
+                formulaInput.focus();
+                if (!formulaInput.value.startsWith('=')) {
+                    formulaInput.value = '=' + formulaInput.value;
+                }
+            });
+
+            document.getElementById('btn-add-sheet').addEventListener('click', addNewSheet);
+
+            // Zoom Controls
+            const zoomSlider = document.getElementById('zoom-slider');
+            const zoomLabel = document.getElementById('zoom-label');
+            function applyZoom(val) {
+                const pct = Math.max(50, Math.min(200, Number(val)));
+                zoomSlider.value = pct;
+                zoomLabel.textContent = `${pct}%`;
+                spreadsheetTable.style.zoom = `${pct}%`;
+            }
+            zoomSlider.addEventListener('input', (e) => applyZoom(e.target.value));
+            document.getElementById('zoom-out-btn').addEventListener('click', () => applyZoom(Number(zoomSlider.value) - 10));
+            document.getElementById('zoom-in-btn').addEventListener('click', () => applyZoom(Number(zoomSlider.value) + 10));
+            document.getElementById('btn-zoom-100').addEventListener('click', () => applyZoom(100));
+            document.getElementById('btn-zoom-in-rib').addEventListener('click', () => applyZoom(Number(zoomSlider.value) + 10));
+            document.getElementById('btn-zoom-out-rib').addEventListener('click', () => applyZoom(Number(zoomSlider.value) - 10));
+
+            // Global Keyboard Navigation & Shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (document.activeElement === formulaInput || isEditingInline) return;
+                if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+
+                if (e.ctrlKey || e.metaKey) {
+                    const key = e.key.toLowerCase();
+                    if (key === 'z') { e.preventDefault(); performUndo(); return; }
+                    if (key === 'y') { e.preventDefault(); performRedo(); return; }
+                    if (key === 'c') { e.preventDefault(); copySelection('copy'); return; }
+                    if (key === 'x') { e.preventDefault(); copySelection('cut'); return; }
+                    if (key === 'v') { e.preventDefault(); pasteSelection(); return; }
+                    if (key === 'b') { e.preventDefault(); toggleSelectionBoolStyle('bold'); return; }
+                    if (key === 'i') { e.preventDefault(); toggleSelectionBoolStyle('italic'); return; }
+                    if (key === 'u') { e.preventDefault(); toggleSelectionBoolStyle('underline'); return; }
+                    if (key === 's') { e.preventDefault(); exportCsv(); return; }
+                }
+
+                switch (e.key) {
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        if (e.shiftKey) setSelectionRange(activeRow, activeCol, selEndRow - 1, selEndCol, activeRow, activeCol);
+                        else setSelectionRange(activeRow - 1, activeCol, activeRow - 1, activeCol, activeRow - 1, activeCol);
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        if (e.shiftKey) setSelectionRange(activeRow, activeCol, selEndRow + 1, selEndCol, activeRow, activeCol);
+                        else setSelectionRange(activeRow + 1, activeCol, activeRow + 1, activeCol, activeRow + 1, activeCol);
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        if (e.shiftKey) setSelectionRange(activeRow, activeCol, selEndRow, selEndCol - 1, activeRow, activeCol);
+                        else setSelectionRange(activeRow, activeCol - 1, activeRow, activeCol - 1, activeRow, activeCol - 1);
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        if (e.shiftKey) setSelectionRange(activeRow, activeCol, selEndRow, selEndCol + 1, activeRow, activeCol);
+                        else setSelectionRange(activeRow, activeCol + 1, activeRow, activeCol + 1, activeRow, activeCol + 1);
+                        break;
+                    case 'Tab': {
+                        e.preventDefault();
+                        const nextC = e.shiftKey ? activeCol - 1 : activeCol + 1;
+                        setSelectionRange(activeRow, nextC, activeRow, nextC, activeRow, nextC);
+                        break;
+                    }
+                    case 'Enter':
+                    case 'F2':
+                        e.preventDefault();
+                        startInlineEdit(activeRow, activeCol);
+                        break;
+                    case 'Backspace':
+                    case 'Delete':
+                        e.preventDefault();
+                        clearSelectedContents();
+                        break;
+                    default:
+                        if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                            e.preventDefault();
+                            startInlineEdit(activeRow, activeCol, e.key);
+                        }
+                        break;
+                }
+            });
+
+            // Initialize Blank Workbook
+            buildGrid();
+            renderSheetTabs();
+            setSelectionRange(1, 0, 1, 0, 1, 0);
+        })();
+    </script></body></html>
