@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<title>A.I Excel</title>
+<head>
+    <style>
+        *{
+            font-size: 1.3rem;
+            font-family: Ubuntu;
+            
+        }
+        body{
+            background: #9997b0;
+background: -webkit-linear-gradient(90deg, rgba(153, 151, 176, 1) 0%, rgba(186, 212, 219, 1) 100%);
+background: -moz-linear-gradient(90deg, rgba(153, 151, 176, 1) 0%, rgba(186, 212, 219, 1) 100%);
+background: linear-gradient(90deg, rgba(153, 151, 176, 1) 0%, rgba(186, 212, 219, 1) 100%);
+filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#9997B0", endColorstr="#BAD4DB", GradientType=1);
+        }
+    </style>
+</head>
+
+<body style="text-align: center;">
+    <h2 style="color:green;">
+        A.I Excel
+    </h2>
+    
+    <h4 style="color:purple">
+        Launch a cool vibe-coded Excel
+    </h4>
+
+    <button onclick="openWin()">
+        Launch app
+    </button>
+
+    <button onclick="closeWin()">
+        Close app
+    </button>
+    
+    <br><br>
+    <a href="https://sslightly.github.io/spreadsheets/app/">
+        Click me if it doesn't open
+        
+    </a>
+
+    <script>
+        let windowApp;
+
+        function openWin() {
+            windowApp = window
+                .open("https://sslightly.github.io/spreadsheets/app/", 
+                "_blank", "width=786, height=786");
+        }
+
+        function closeWin() {
+            windowApp.close();
+        }
+    </script>
+</body>
+</html>
